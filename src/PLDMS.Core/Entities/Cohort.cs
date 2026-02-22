@@ -9,4 +9,6 @@ public class Cohort : BaseEntity<int>
     public DateOnly EndDate { get; set; }
     public int StudentCount { get; set; }
     public bool IsDeleted { get; set; }
+    
+    public ICollection<Session> Sessions { get; set; }
 }
