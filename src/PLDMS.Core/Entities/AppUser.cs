@@ -9,4 +9,8 @@ public class AppUser : IdentityUser<Guid>
     public UserRole Role { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsDeleted { get; set; }
+
+    public ICollection<Review> ReviewsGiven { get; set; }
+    public ICollection<Review> ReviewsAssigned { get; set; }
+
 }
