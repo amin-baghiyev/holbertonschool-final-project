@@ -1,7 +1,7 @@
+using System.Linq.Expressions;
 using code8hackathon.DL.Repositories.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
-using System.Linq.Expressions;
 using PLDMS.DL.Contexts;
 
 namespace code8hackathon.DL.Repositories.Implementations;
@@ -17,7 +17,9 @@ public class Repository<T> : IRepository<T> where T : class, new()
 
     public DbSet<T> Table => _context.Set<T>();
 
-    public async Task<ICollection<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null, int page = 0, int count = 0, Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null, bool orderAsc = true, string orderBy = "Id", bool isTracking = false)
+    public async Task<ICollection<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null, int page = 0,
+        int count = 0, Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null, bool orderAsc = true,
+        string orderBy = "Id", bool isTracking = false)
     {
         IQueryable<T> query = Table;
 
@@ -27,9 +29,9 @@ public class Repository<T> : IRepository<T> where T : class, new()
 
         if (predicate is not null) query = query.Where(predicate);
 
-        ParameterExpression parameter = Expression.Parameter(typeof(T), "e");
-        MemberExpression property = Expression.Property(parameter, orderBy);
-        Expression<Func<T, object>> lambda = Expression.Lambda<Func<T, object>>(Expression.Convert(property, typeof(object)), parameter);
+        var parameter = Expression.Parameter(typeof(T), "e");
+        var property = Expression.Property(parameter, orderBy);
+        var lambda = Expression.Lambda<Func<T, object>>(Expression.Convert(property, typeof(object)), parameter);
 
         query = orderAsc ? query.OrderBy(lambda) : query.OrderByDescending(lambda);
 
@@ -38,7 +40,8 @@ public class Repository<T> : IRepository<T> where T : class, new()
         return await query.ToListAsync();
     }
 
-    public async Task<T?> GetOneAsync(Expression<Func<T, bool>> predicate, Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null, bool isTracking = false)
+    public async Task<T?> GetOneAsync(Expression<Func<T, bool>> predicate,
+        Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null, bool isTracking = false)
     {
         IQueryable<T> query = Table;
 
@@ -64,5 +67,8 @@ public class Repository<T> : IRepository<T> where T : class, new()
         Table.Remove(entity);
     }
 
-    public async Task<int> SaveChangesAsync() => await _context.SaveChangesAsync();
+    public async Task<int> SaveChangesAsync()
+    {
+        return await _context.SaveChangesAsync();
+    }
 }

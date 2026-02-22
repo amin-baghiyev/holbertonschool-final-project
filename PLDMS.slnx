@@ -1,8 +1,8 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/PLDMS.BL/PLDMS.BL.csproj" />
-    <Project Path="src/PLDMS.DL/PLDMS.DL.csproj" />
-    <Project Path="src/PLDMS.PL/PLDMS.PL.csproj" />
-    <Project Path="src/PLDMS.Core/PLDMS.Core.csproj" />
-  </Folder>
+    <Folder Name="/src/">
+        <Project Path="src/PLDMS.BL/PLDMS.BL.csproj"/>
+        <Project Path="src/PLDMS.DL/PLDMS.DL.csproj"/>
+        <Project Path="src/PLDMS.PL/PLDMS.PL.csproj"/>
+        <Project Path="src/PLDMS.Core/PLDMS.Core.csproj"/>
+    </Folder>
 </Solution>
