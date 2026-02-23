@@ -38,7 +38,7 @@ builder.Services.AddBLServices();
 
 builder.Services.ConfigureApplicationCookie(opt =>
 {
-    opt.LoginPath = "/login";
+    opt.LoginPath = "/account/login";
     opt.AccessDeniedPath = "/";
 });
 
@@ -54,6 +54,6 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllerRoute("default", "{controller=Login}/{action=Index}/{id?}");
+app.MapControllerRoute("default", "{controller=Account}/{action=Index}/{id?}");
 
 app.Run();
