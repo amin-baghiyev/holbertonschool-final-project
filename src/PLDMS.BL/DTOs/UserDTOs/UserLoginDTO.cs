@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PLDMS.BL.DTOs;
 
-public class UserLoginDTO
+public record UserLoginDTO
 {
     [Display(Prompt = "Email")]
     [DataType(DataType.EmailAddress)]

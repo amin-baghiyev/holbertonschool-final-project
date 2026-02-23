@@ -232,8 +232,7 @@ namespace PLDMS.DL.Migrations
                     StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     StudentCountPerGroup = table.Column<int>(type: "integer", nullable: false, defaultValue: 2),
-                    TotalStudentCount = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    SessionStatus = table.Column<int>(type: "integer", nullable: false)
+                    TotalStudentCount = table.Column<int>(type: "integer", nullable: false, defaultValue: 0)
                 },
                 constraints: table =>
                 {

@@ -431,9 +431,6 @@ namespace PLDMS.DL.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("SessionStatus")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
 

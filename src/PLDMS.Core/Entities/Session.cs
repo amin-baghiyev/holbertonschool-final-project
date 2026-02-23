@@ -1,5 +1,4 @@
 using PLDMS.Core.Entities.Base;
-using PLDMS.Core.Enums;
 
 namespace PLDMS.Core.Entities;
 
@@ -16,7 +15,6 @@ public class Session : BaseEntity<Guid>
     public DateTime EndDate { get; set; }
     public int StudentCountPerGroup { get; set; }
     public int TotalStudentCount { get; set; }
-    public SessionStatus SessionStatus { get; set; }
 
     public ICollection<Group> Groups { get; set; } = [];
     public ICollection<SessionExercise> Exercises { get; set; } = [];

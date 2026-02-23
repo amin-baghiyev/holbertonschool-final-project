@@ -12,7 +12,7 @@ using PLDMS.DL.Contexts;
 namespace PLDMS.DL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260223074706_genesis")]
+    [Migration("20260223143913_genesis")]
     partial class genesis
     {
         /// <inheritdoc />
@@ -433,9 +433,6 @@ namespace PLDMS.DL.Migrations
                     b.Property<string>("RepositoryUrl")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<int>("SessionStatus")
-                        .HasColumnType("integer");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");

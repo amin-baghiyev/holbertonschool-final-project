@@ -33,9 +33,6 @@ public class SessionConfiguration : IEntityTypeConfiguration<Session>
             .IsRequired()
             .HasColumnType("timestamp with time zone");
 
-        builder.Property(s => s.SessionStatus)
-            .IsRequired();
-
         builder.HasOne(s => s.Cohort)
             .WithMany(c => c.Sessions)
             .HasForeignKey(s => s.CohortId)
