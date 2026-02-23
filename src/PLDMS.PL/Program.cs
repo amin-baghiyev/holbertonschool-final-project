@@ -4,6 +4,7 @@ using PLDMS.BL;
 using PLDMS.Core.Entities;
 using PLDMS.DL;
 using PLDMS.DL.Contexts;
+using PLDMS.PL.Extensions;
 using PLDMS.PL.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -46,6 +47,16 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
+    var services = scope.ServiceProvider;
+
+    var db = services.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+
+    await IdentitySeeder.SeedAdminAsync(services);
+}
+
+using (var scope = app.Services.CreateScope())
+{
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
 }
@@ -53,6 +64,11 @@ using (var scope = app.Services.CreateScope())
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapControllerRoute(
+    "areas",
+    "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}"
+);
 
 app.MapControllerRoute("default", "{controller=Account}/{action=Index}/{id?}");
 
