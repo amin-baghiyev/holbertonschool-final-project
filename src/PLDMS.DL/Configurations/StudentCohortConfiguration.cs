@@ -12,10 +12,15 @@ public class StudentCohortConfiguration : IEntityTypeConfiguration<StudentCohort
 
         builder.HasOne(sc => sc.Student)
             .WithMany()
-            .HasForeignKey(sc => sc.StudentId);
+            .HasForeignKey(sc => sc.StudentId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(sc => sc.Cohort)
             .WithMany()
-            .HasForeignKey(sc => sc.CohortId);
+            .HasForeignKey(sc => sc.CohortId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Property(p => p.IsDeleted)
+            .HasDefaultValue(false);
     }
 }

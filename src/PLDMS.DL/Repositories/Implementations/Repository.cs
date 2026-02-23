@@ -1,10 +1,10 @@
 using System.Linq.Expressions;
-using code8hackathon.DL.Repositories.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using PLDMS.DL.Contexts;
+using PLDMS.DL.Repositories.Abstractions;
 
-namespace code8hackathon.DL.Repositories.Implementations;
+namespace PLDMS.DL.Repositories.Implementations;
 
 public class Repository<T> : IRepository<T> where T : class, new()
 {

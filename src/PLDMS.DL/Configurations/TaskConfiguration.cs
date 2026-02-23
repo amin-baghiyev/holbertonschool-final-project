@@ -12,15 +12,29 @@ public class TaskConfiguration : IEntityTypeConfiguration<Task>
             .IsRequired()
             .HasMaxLength(150);
 
+        builder.Property(t => t.Description)
+            .IsRequired()
+            .HasMaxLength(512);
+
+        builder.Property(t => t.Difficulty)
+            .IsRequired();
+
         builder.Property(t => t.IsDeleted)
             .HasDefaultValue(false);
 
-        builder.HasMany(t => t.Submissions)
-            .WithOne(s => s.Task)
-            .HasForeignKey(s => s.TaskId);
+        builder.HasOne(t => t.Program)
+            .WithMany()
+            .HasForeignKey(t => t.ProgramId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(t => t.TestCases)
             .WithOne(tc => tc.Task)
-            .HasForeignKey(tc => tc.TaskId);
+            .HasForeignKey(tc => tc.TaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(t => t.TaskLanguages)
+            .WithOne(tc => tc.Task)
+            .HasForeignKey(tc => tc.TaskId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

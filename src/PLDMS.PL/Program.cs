@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PLDMS.Core.Entities;
+using PLDMS.DL;
 using PLDMS.DL.Contexts;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,7 +12,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     )
 );
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(opt => opt.ModelValidatorProviders.Clear());
 
 builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
     {
@@ -26,21 +27,26 @@ builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddAuthorization();
+builder.Services.AddDLServices();
+
+builder.Services.ConfigureApplicationCookie(opt =>
+{
+    opt.LoginPath = "/login";
+    opt.AccessDeniedPath = "/";
+});
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment()) app.UseExceptionHandler("/Home/Error");
-app.UseRouting();
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+}
 
+app.UseStaticFiles();
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
-
-app.MapControllerRoute(
-        "default",
-        "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
-
+app.MapControllerRoute("default", "{controller=Login}/{action=Index}/{id?}");
 
 app.Run();

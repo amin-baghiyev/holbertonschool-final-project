@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 
-namespace code8hackathon.DL.Repositories.Abstractions;
+namespace PLDMS.DL.Repositories.Abstractions;
 
 public interface IRepository<T> where T : class, new()
 {

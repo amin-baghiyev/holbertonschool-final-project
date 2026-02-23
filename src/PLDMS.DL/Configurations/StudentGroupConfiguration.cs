@@ -12,10 +12,12 @@ public class StudentGroupConfiguration : IEntityTypeConfiguration<StudentGroup>
 
         builder.HasOne(sg => sg.Student)
             .WithMany()
-            .HasForeignKey(sg => sg.StudentId);
+            .HasForeignKey(sg => sg.StudentId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(sg => sg.Group)
-            .WithMany()
-            .HasForeignKey(sg => sg.GroupId);
+            .WithMany(g => g.Students)
+            .HasForeignKey(sg => sg.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

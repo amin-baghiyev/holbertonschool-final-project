@@ -10,7 +10,6 @@ public class AppUser : IdentityUser<Guid>
     public DateTime CreatedAt { get; set; }
     public bool IsDeleted { get; set; }
 
-    public ICollection<Review> ReviewsGiven { get; set; }
-    public ICollection<Review> ReviewsAssigned { get; set; }
-
+    public ICollection<Review>? ReviewsGiven { get; set; }
+    public ICollection<Review>? ReviewsAssigned { get; set; }
 }

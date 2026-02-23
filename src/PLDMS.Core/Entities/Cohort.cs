@@ -7,8 +7,10 @@ public class Cohort : BaseEntity<int>
     public string Name { get; set; } = null!;
     public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }
-    public int StudentCount { get; set; }
+    public int TotalStudentCount { get; set; }
     public bool IsDeleted { get; set; }
-    
-    public ICollection<Session> Sessions { get; set; }
+    public int ProgramId { get; set; }
+    public Program Program { get; set; }
+
+    public ICollection<Session> Sessions { get; set; } = [];
 }

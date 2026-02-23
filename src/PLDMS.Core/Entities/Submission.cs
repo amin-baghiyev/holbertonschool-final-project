@@ -3,19 +3,16 @@ using PLDMS.Core.Enums;
 
 namespace PLDMS.Core.Entities;
 
-public class Submission : BaseEntity<int>
+public class Submission : BaseEntity<Guid>
 {
-    public int GroupId { get; set; }
+    public Guid GroupId { get; set; }
     public Group Group { get; set; }
     
-    public int TaskId { get; set; }
+    public long TaskId { get; set; }
     public Task Task { get; set; }
-    
-    public string RepositoryUrl { get; set; }
-    public string CommitHash { get; set; }
-    public string BranchName { get; set; }
+
+    public string CommitHash { get; set; } = null!;
     public ProgrammingLanguage ProgrammingLanguage { get; set; }
-    public int CorrectTestCount { get; set; }
-    public int TotalTestCount { get; set; }
+    public bool[] Tests { get; set; } = [];
     public DateTime CreatedAt { get; set; }
 }

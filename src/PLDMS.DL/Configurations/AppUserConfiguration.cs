@@ -18,7 +18,14 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
         
         builder.Property(u => u.FullName)
             .IsRequired()
-            .HasMaxLength(50);
+            .HasMaxLength(100);
+
+        builder.Property(r => r.CreatedAt)
+            .IsRequired()
+            .HasColumnType("timestamp with time zone");
+
+        builder.Property(c => c.IsDeleted)
+            .HasDefaultValue(false);
 
         builder.HasMany(u => u.ReviewsGiven)
             .WithOne(r => r.Reviewer)

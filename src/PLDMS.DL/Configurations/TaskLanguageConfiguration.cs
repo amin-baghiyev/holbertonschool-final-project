@@ -12,6 +12,7 @@ public class TaskLanguageConfiguration : IEntityTypeConfiguration<TaskLanguage>
 
         builder.HasOne(tl => tl.Task)
             .WithMany(t => t.TaskLanguages)
-            .HasForeignKey(tl => tl.TaskId);
+            .HasForeignKey(tl => tl.TaskId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

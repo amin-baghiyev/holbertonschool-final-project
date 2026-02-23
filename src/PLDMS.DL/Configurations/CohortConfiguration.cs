@@ -12,15 +12,28 @@ public class CohortConfiguration : IEntityTypeConfiguration<Cohort>
             .IsRequired()
             .HasMaxLength(150);
 
-        builder.Property(c => c.StudentCount)
+        builder.Property(c => c.StartDate)
+            .HasColumnType("date")
+            .IsRequired();
+
+        builder.Property(c => c.EndDate)
+            .HasColumnType("date")
+            .IsRequired();
+
+        builder.Property(c => c.TotalStudentCount)
             .HasDefaultValue(0);
 
         builder.Property(c => c.IsDeleted)
             .HasDefaultValue(false);
 
+        builder.HasOne(c => c.Program)
+            .WithMany()
+            .HasForeignKey(c => c.ProgramId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasMany(c => c.Sessions)
             .WithOne(s => s.Cohort)
             .HasForeignKey(s => s.CohortId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

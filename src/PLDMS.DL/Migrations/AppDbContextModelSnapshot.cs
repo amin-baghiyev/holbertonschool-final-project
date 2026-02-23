@@ -178,11 +178,13 @@ namespace PLDMS.DL.Migrations
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
@@ -244,37 +246,42 @@ namespace PLDMS.DL.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<int>("ProgramId")
+                        .HasColumnType("integer");
+
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
 
-                    b.Property<int>("StudentCount")
+                    b.Property<int>("TotalStudentCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProgramId");
+
                     b.ToTable("Cohorts");
                 });
 
             modelBuilder.Entity("PLDMS.Core.Entities.Group", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<int>("SessionCount")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer");
+                    b.Property<int>("TotalStudentCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.HasKey("Id");
 
@@ -290,10 +297,6 @@ namespace PLDMS.DL.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<TimeSpan>("Duration")
                         .HasColumnType("interval");
@@ -315,11 +318,9 @@ namespace PLDMS.DL.Migrations
 
             modelBuilder.Entity("PLDMS.Core.Entities.Review", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("AssignedById")
                         .HasColumnType("uuid");
@@ -327,13 +328,12 @@ namespace PLDMS.DL.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("GroupId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Note")
                         .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("text");
 
                     b.Property<int>("ReviewStatus")
                         .HasColumnType("integer");
@@ -352,19 +352,23 @@ namespace PLDMS.DL.Migrations
 
                     b.HasIndex("ReviewerId");
 
-                    b.ToTable("Reviews");
+                    b.ToTable("Reviews", t =>
+                        {
+                            t.HasCheckConstraint("CK_Review_Score", "\"Score\" >= 0 AND \"Score\" <= 10");
+                        });
                 });
 
             modelBuilder.Entity("PLDMS.Core.Entities.Session", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<int>("CohortId")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone");
@@ -374,19 +378,25 @@ namespace PLDMS.DL.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
-                    b.Property<int>("ReviewStatus")
+                    b.Property<string>("RepositoryUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SessionStatus")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("StudentCount")
+                    b.Property<int>("StudentCountPerGroup")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(2);
+
+                    b.Property<int>("TotalStudentCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
-
-                    b.Property<int>("StudentCountPerGroup")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -397,32 +407,17 @@ namespace PLDMS.DL.Migrations
 
             modelBuilder.Entity("PLDMS.Core.Entities.SessionTask", b =>
                 {
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int>("TaskId")
-                        .HasColumnType("integer");
+                    b.Property<long>("TaskId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("SessionId", "TaskId");
 
                     b.HasIndex("TaskId");
 
                     b.ToTable("SessionTasks");
-                });
-
-            modelBuilder.Entity("PLDMS.Core.Entities.Student", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("GitHub")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Students");
                 });
 
             modelBuilder.Entity("PLDMS.Core.Entities.StudentCohort", b =>
@@ -432,6 +427,11 @@ namespace PLDMS.DL.Migrations
 
                     b.Property<int>("CohortId")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.HasKey("StudentId", "CohortId");
 
@@ -445,8 +445,8 @@ namespace PLDMS.DL.Migrations
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("GroupId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("StudentId", "GroupId");
 
@@ -457,44 +457,30 @@ namespace PLDMS.DL.Migrations
 
             modelBuilder.Entity("PLDMS.Core.Entities.Submission", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BranchName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("CommitHash")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<int>("CorrectTestCount")
-                        .HasColumnType("integer");
+                        .HasMaxLength(12)
+                        .HasColumnType("character varying(12)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("GroupId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("ProgrammingLanguage")
                         .HasColumnType("integer");
 
-                    b.Property<string>("RepositoryUrl")
+                    b.Property<long>("TaskId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int[]>("Tests")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<int>("TaskId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TotalTestCount")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer[]");
 
                     b.HasKey("Id");
 
@@ -507,15 +493,16 @@ namespace PLDMS.DL.Migrations
 
             modelBuilder.Entity("PLDMS.Core.Entities.Task", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
                     b.Property<int>("Difficulty")
                         .HasColumnType("integer");
@@ -542,8 +529,8 @@ namespace PLDMS.DL.Migrations
 
             modelBuilder.Entity("PLDMS.Core.Entities.TaskLanguage", b =>
                 {
-                    b.Property<int>("TaskId")
-                        .HasColumnType("integer");
+                    b.Property<long>("TaskId")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("ProgrammingLanguage")
                         .HasColumnType("integer");
@@ -555,11 +542,11 @@ namespace PLDMS.DL.Migrations
 
             modelBuilder.Entity("PLDMS.Core.Entities.TestCase", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Input")
                         .IsRequired()
@@ -574,8 +561,8 @@ namespace PLDMS.DL.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("TaskId")
-                        .HasColumnType("integer");
+                    b.Property<long>("TaskId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -635,6 +622,17 @@ namespace PLDMS.DL.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PLDMS.Core.Entities.Cohort", b =>
+                {
+                    b.HasOne("PLDMS.Core.Entities.Program", "Program")
+                        .WithMany()
+                        .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Program");
+                });
+
             modelBuilder.Entity("PLDMS.Core.Entities.Group", b =>
                 {
                     b.HasOne("PLDMS.Core.Entities.Session", "Session")
@@ -655,9 +653,9 @@ namespace PLDMS.DL.Migrations
                         .IsRequired();
 
                     b.HasOne("PLDMS.Core.Entities.Group", "Group")
-                        .WithMany("Reviews")
+                        .WithMany()
                         .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("PLDMS.Core.Entities.AppUser", "Reviewer")
@@ -678,7 +676,7 @@ namespace PLDMS.DL.Migrations
                     b.HasOne("PLDMS.Core.Entities.Cohort", "Cohort")
                         .WithMany("Sessions")
                         .HasForeignKey("CohortId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Cohort");
@@ -687,7 +685,7 @@ namespace PLDMS.DL.Migrations
             modelBuilder.Entity("PLDMS.Core.Entities.SessionTask", b =>
                 {
                     b.HasOne("PLDMS.Core.Entities.Session", "Session")
-                        .WithMany()
+                        .WithMany("Tasks")
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -695,7 +693,7 @@ namespace PLDMS.DL.Migrations
                     b.HasOne("PLDMS.Core.Entities.Task", "Task")
                         .WithMany()
                         .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Session");
@@ -708,13 +706,13 @@ namespace PLDMS.DL.Migrations
                     b.HasOne("PLDMS.Core.Entities.Cohort", "Cohort")
                         .WithMany()
                         .HasForeignKey("CohortId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("PLDMS.Core.Entities.Student", "Student")
+                    b.HasOne("PLDMS.Core.Entities.AppUser", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Cohort");
@@ -725,15 +723,15 @@ namespace PLDMS.DL.Migrations
             modelBuilder.Entity("PLDMS.Core.Entities.StudentGroup", b =>
                 {
                     b.HasOne("PLDMS.Core.Entities.Group", "Group")
-                        .WithMany()
+                        .WithMany("Students")
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PLDMS.Core.Entities.Student", "Student")
+                    b.HasOne("PLDMS.Core.Entities.AppUser", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Group");
@@ -746,13 +744,13 @@ namespace PLDMS.DL.Migrations
                     b.HasOne("PLDMS.Core.Entities.Group", "Group")
                         .WithMany("Submissions")
                         .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("PLDMS.Core.Entities.Task", "Task")
-                        .WithMany("Submissions")
+                        .WithMany()
                         .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Group");
@@ -763,9 +761,9 @@ namespace PLDMS.DL.Migrations
             modelBuilder.Entity("PLDMS.Core.Entities.Task", b =>
                 {
                     b.HasOne("PLDMS.Core.Entities.Program", "Program")
-                        .WithMany("Tasks")
+                        .WithMany()
                         .HasForeignKey("ProgramId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Program");
@@ -807,25 +805,20 @@ namespace PLDMS.DL.Migrations
 
             modelBuilder.Entity("PLDMS.Core.Entities.Group", b =>
                 {
-                    b.Navigation("Reviews");
+                    b.Navigation("Students");
 
                     b.Navigation("Submissions");
-                });
-
-            modelBuilder.Entity("PLDMS.Core.Entities.Program", b =>
-                {
-                    b.Navigation("Tasks");
                 });
 
             modelBuilder.Entity("PLDMS.Core.Entities.Session", b =>
                 {
                     b.Navigation("Groups");
+
+                    b.Navigation("Tasks");
                 });
 
             modelBuilder.Entity("PLDMS.Core.Entities.Task", b =>
                 {
-                    b.Navigation("Submissions");
-
                     b.Navigation("TaskLanguages");
 
                     b.Navigation("TestCases");

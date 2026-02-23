@@ -12,15 +12,11 @@ public class ProgramConfiguration : IEntityTypeConfiguration<Program>
             .IsRequired()
             .HasMaxLength(150);
 
-        builder.Property(p => p.Description)
-            .IsRequired();
+        builder.Property(p => p.Duration)
+           .HasColumnType("interval")
+           .IsRequired();
 
         builder.Property(p => p.IsDeleted)
             .HasDefaultValue(false);
-
-        builder.HasMany(p => p.Tasks)
-            .WithOne(t => t.Program)
-            .HasForeignKey(t => t.ProgramId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -2,16 +2,15 @@ using PLDMS.Core.Entities.Base;
 
 namespace PLDMS.Core.Entities;
 
-public class Group : BaseEntity<int>
+public class Group : BaseEntity<Guid>
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = null!;
     
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; }
     public Session Session { get; set; }
     
-    public int SessionCount { get; set; }
+    public int TotalStudentCount { get; set; }
     
-    public ICollection<Review> Reviews { get; set; }
-    
-    public ICollection<Submission> Submissions { get; set; }
+    public ICollection<Submission> Submissions { get; set; } = [];
+    public ICollection<StudentGroup> Students { get; set; } = [];
 }

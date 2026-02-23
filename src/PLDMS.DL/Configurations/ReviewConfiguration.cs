@@ -8,11 +8,13 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
 {
     public void Configure(EntityTypeBuilder<Review> builder)
     {
+        builder.ToTable(tb => tb.HasCheckConstraint("CK_Review_Score", "\"Score\" >= 0 AND \"Score\" <= 10"));
+
         builder.Property(r => r.Score)
             .IsRequired();
 
         builder.Property(r => r.Note)
-            .HasMaxLength(1000);
+            .HasColumnType("text");
 
         builder.Property(r => r.CreatedAt)
             .IsRequired();
@@ -28,9 +30,12 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(r => r.Group)
-            .WithMany(g => g.Reviews)
+            .WithMany()
             .HasForeignKey(r => r.GroupId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Property(s => s.CreatedAt)
+            .IsRequired()
+            .HasColumnType("timestamp with time zone");
     }
 }

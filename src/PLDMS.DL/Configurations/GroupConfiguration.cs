@@ -12,14 +12,17 @@ public class GroupConfiguration : IEntityTypeConfiguration<Group>
             .IsRequired()
             .HasMaxLength(100);
 
-        builder.HasMany(g => g.Reviews)
-            .WithOne(r => r.Group)
-            .HasForeignKey(r => r.GroupId)
+        builder.Property(c => c.TotalStudentCount)
+            .HasDefaultValue(0);
+
+        builder.HasOne(g => g.Session)
+            .WithMany(s => s.Groups)
+            .HasForeignKey(g => g.SessionId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(g => g.Submissions)
             .WithOne(s => s.Group)
             .HasForeignKey(s => s.GroupId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

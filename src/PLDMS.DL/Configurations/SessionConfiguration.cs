@@ -12,8 +12,34 @@ public class SessionConfiguration : IEntityTypeConfiguration<Session>
             .IsRequired()
             .HasMaxLength(150);
 
-        builder.Property(s => s.StudentCount)
+        builder.Property(s => s.RepositoryUrl)
+            .IsRequired();
+
+        builder.Property(s => s.StudentCountPerGroup)
+            .HasDefaultValue(2);
+
+        builder.Property(s => s.TotalStudentCount)
             .HasDefaultValue(0);
+
+        builder.Property(s => s.CreatedAt)
+            .IsRequired()
+            .HasColumnType("timestamp with time zone");
+
+        builder.Property(s => s.StartDate)
+            .IsRequired()
+            .HasColumnType("timestamp with time zone");
+
+        builder.Property(s => s.EndDate)
+            .IsRequired()
+            .HasColumnType("timestamp with time zone");
+
+        builder.Property(s => s.SessionStatus)
+            .IsRequired();
+
+        builder.HasOne(s => s.Cohort)
+            .WithMany(c => c.Sessions)
+            .HasForeignKey(s => s.CohortId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(s => s.Groups)
             .WithOne(g => g.Session)
