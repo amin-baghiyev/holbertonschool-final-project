@@ -8,6 +8,6 @@ public class TestCase : BaseEntity<long>
     public string Output { get; set; } = null!;
     public bool IsDeleted { get; set; }
 
-    public long TaskId { get; set; }
-    public Task Task { get; set; }
+    public long ExerciseId { get; set; }
+    public Exercise Exercise { get; set; }
 }

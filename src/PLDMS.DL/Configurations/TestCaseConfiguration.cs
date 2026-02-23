@@ -17,9 +17,9 @@ public class TestCaseConfiguration : IEntityTypeConfiguration<TestCase>
         builder.Property(tc => tc.IsDeleted)
             .HasDefaultValue(false);
 
-        builder.HasOne(tc => tc.Task)
+        builder.HasOne(tc => tc.Exercise)
             .WithMany(t => t.TestCases)
-            .HasForeignKey(tc => tc.TaskId)
+            .HasForeignKey(tc => tc.ExerciseId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

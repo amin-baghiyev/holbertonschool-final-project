@@ -41,9 +41,9 @@ public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
             .HasForeignKey(s => s.GroupId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(s => s.Task)
+        builder.HasOne(s => s.Exercise)
             .WithMany()
-            .HasForeignKey(s => s.TaskId)
+            .HasForeignKey(s => s.ExerciseId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using PLDMS.BL;
 using PLDMS.Core.Entities;
 using PLDMS.DL;
 using PLDMS.DL.Contexts;
+using PLDMS.PL.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +14,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     )
 );
 
-builder.Services.AddControllersWithViews(opt => opt.ModelValidatorProviders.Clear());
+builder.Services.AddControllersWithViews(opt =>
+{
+    opt.ModelValidatorProviders.Clear();
+    opt.Filters.Add<GlobalExceptionFilter>();
+});
 
 builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
     {
@@ -28,6 +34,7 @@ builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
     .AddDefaultTokenProviders();
 
 builder.Services.AddDLServices();
+builder.Services.AddBLServices();
 
 builder.Services.ConfigureApplicationCookie(opt =>
 {

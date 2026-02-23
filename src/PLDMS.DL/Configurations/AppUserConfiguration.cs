@@ -36,6 +36,5 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
             .WithOne(r => r.AssignedBy)
             .HasForeignKey(r => r.AssignedById)
             .OnDelete(DeleteBehavior.Restrict);
-
     }
 }

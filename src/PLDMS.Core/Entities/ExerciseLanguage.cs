@@ -2,10 +2,10 @@ using PLDMS.Core.Enums;
 
 namespace PLDMS.Core.Entities;
 
-public class TaskLanguage
+public class ExerciseLanguage
 {
-    public long TaskId { get; set; }
-    public Task Task { get; set; }
+    public long ExerciseId { get; set; }
+    public Exercise Exercise { get; set; }
     
     public ProgrammingLanguage ProgrammingLanguage { get; set; }
 }

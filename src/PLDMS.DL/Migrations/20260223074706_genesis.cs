@@ -198,7 +198,7 @@ namespace PLDMS.DL.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Tasks",
+                name: "Exercises",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
@@ -211,9 +211,9 @@ namespace PLDMS.DL.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tasks", x => x.Id);
+                    table.PrimaryKey("PK_Exercises", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Tasks_Programs_ProgramId",
+                        name: "FK_Exercises_Programs_ProgramId",
                         column: x => x.ProgramId,
                         principalTable: "Programs",
                         principalColumn: "Id",
@@ -272,19 +272,19 @@ namespace PLDMS.DL.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TaskLanguages",
+                name: "ExerciseLanguages",
                 columns: table => new
                 {
-                    TaskId = table.Column<long>(type: "bigint", nullable: false),
+                    ExerciseId = table.Column<long>(type: "bigint", nullable: false),
                     ProgrammingLanguage = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TaskLanguages", x => new { x.TaskId, x.ProgrammingLanguage });
+                    table.PrimaryKey("PK_ExerciseLanguages", x => new { x.ExerciseId, x.ProgrammingLanguage });
                     table.ForeignKey(
-                        name: "FK_TaskLanguages_Tasks_TaskId",
-                        column: x => x.TaskId,
-                        principalTable: "Tasks",
+                        name: "FK_ExerciseLanguages_Exercises_ExerciseId",
+                        column: x => x.ExerciseId,
+                        principalTable: "Exercises",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -298,15 +298,15 @@ namespace PLDMS.DL.Migrations
                     Input = table.Column<string>(type: "text", nullable: false),
                     Output = table.Column<string>(type: "text", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    TaskId = table.Column<long>(type: "bigint", nullable: false)
+                    ExerciseId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_TestCases", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TestCases_Tasks_TaskId",
-                        column: x => x.TaskId,
-                        principalTable: "Tasks",
+                        name: "FK_TestCases_Exercises_ExerciseId",
+                        column: x => x.ExerciseId,
+                        principalTable: "Exercises",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -332,27 +332,27 @@ namespace PLDMS.DL.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SessionTasks",
+                name: "SessionExercises",
                 columns: table => new
                 {
                     SessionId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TaskId = table.Column<long>(type: "bigint", nullable: false)
+                    ExerciseId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SessionTasks", x => new { x.SessionId, x.TaskId });
+                    table.PrimaryKey("PK_SessionExercises", x => new { x.SessionId, x.ExerciseId });
                     table.ForeignKey(
-                        name: "FK_SessionTasks_Sessions_SessionId",
+                        name: "FK_SessionExercises_Exercises_ExerciseId",
+                        column: x => x.ExerciseId,
+                        principalTable: "Exercises",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_SessionExercises_Sessions_SessionId",
                         column: x => x.SessionId,
                         principalTable: "Sessions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_SessionTasks_Tasks_TaskId",
-                        column: x => x.TaskId,
-                        principalTable: "Tasks",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -422,7 +422,7 @@ namespace PLDMS.DL.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     GroupId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TaskId = table.Column<long>(type: "bigint", nullable: false),
+                    ExerciseId = table.Column<long>(type: "bigint", nullable: false),
                     CommitHash = table.Column<string>(type: "character varying(12)", maxLength: 12, nullable: false),
                     ProgrammingLanguage = table.Column<int>(type: "integer", nullable: false),
                     Tests = table.Column<int[]>(type: "integer[]", nullable: false),
@@ -432,15 +432,15 @@ namespace PLDMS.DL.Migrations
                 {
                     table.PrimaryKey("PK_Submissions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Submissions_Groups_GroupId",
-                        column: x => x.GroupId,
-                        principalTable: "Groups",
+                        name: "FK_Submissions_Exercises_ExerciseId",
+                        column: x => x.ExerciseId,
+                        principalTable: "Exercises",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Submissions_Tasks_TaskId",
-                        column: x => x.TaskId,
-                        principalTable: "Tasks",
+                        name: "FK_Submissions_Groups_GroupId",
+                        column: x => x.GroupId,
+                        principalTable: "Groups",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -488,6 +488,11 @@ namespace PLDMS.DL.Migrations
                 column: "ProgramId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Exercises_ProgramId",
+                table: "Exercises",
+                column: "ProgramId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Groups_SessionId",
                 table: "Groups",
                 column: "SessionId");
@@ -508,14 +513,14 @@ namespace PLDMS.DL.Migrations
                 column: "ReviewerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SessionExercises_ExerciseId",
+                table: "SessionExercises",
+                column: "ExerciseId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Sessions_CohortId",
                 table: "Sessions",
                 column: "CohortId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SessionTasks_TaskId",
-                table: "SessionTasks",
-                column: "TaskId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StudentCohorts_CohortId",
@@ -528,24 +533,19 @@ namespace PLDMS.DL.Migrations
                 column: "GroupId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Submissions_ExerciseId",
+                table: "Submissions",
+                column: "ExerciseId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Submissions_GroupId",
                 table: "Submissions",
                 column: "GroupId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Submissions_TaskId",
-                table: "Submissions",
-                column: "TaskId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Tasks_ProgramId",
-                table: "Tasks",
-                column: "ProgramId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TestCases_TaskId",
+                name: "IX_TestCases_ExerciseId",
                 table: "TestCases",
-                column: "TaskId");
+                column: "ExerciseId");
         }
 
         /// <inheritdoc />
@@ -567,10 +567,13 @@ namespace PLDMS.DL.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "ExerciseLanguages");
+
+            migrationBuilder.DropTable(
                 name: "Reviews");
 
             migrationBuilder.DropTable(
-                name: "SessionTasks");
+                name: "SessionExercises");
 
             migrationBuilder.DropTable(
                 name: "StudentCohorts");
@@ -580,9 +583,6 @@ namespace PLDMS.DL.Migrations
 
             migrationBuilder.DropTable(
                 name: "Submissions");
-
-            migrationBuilder.DropTable(
-                name: "TaskLanguages");
 
             migrationBuilder.DropTable(
                 name: "TestCases");
@@ -597,7 +597,7 @@ namespace PLDMS.DL.Migrations
                 name: "Groups");
 
             migrationBuilder.DropTable(
-                name: "Tasks");
+                name: "Exercises");
 
             migrationBuilder.DropTable(
                 name: "Sessions");

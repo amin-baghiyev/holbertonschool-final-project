@@ -19,5 +19,5 @@ public class Session : BaseEntity<Guid>
     public SessionStatus SessionStatus { get; set; }
 
     public ICollection<Group> Groups { get; set; } = [];
-    public ICollection<SessionTask> Tasks { get; set; } = [];
+    public ICollection<SessionExercise> Exercises { get; set; } = [];
 }

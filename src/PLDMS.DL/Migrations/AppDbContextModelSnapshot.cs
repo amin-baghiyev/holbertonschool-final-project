@@ -264,6 +264,55 @@ namespace PLDMS.DL.Migrations
                     b.ToTable("Cohorts");
                 });
 
+            modelBuilder.Entity("PLDMS.Core.Entities.Exercise", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<int>("Difficulty")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<int>("ProgramId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProgramId");
+
+                    b.ToTable("Exercises");
+                });
+
+            modelBuilder.Entity("PLDMS.Core.Entities.ExerciseLanguage", b =>
+                {
+                    b.Property<long>("ExerciseId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("ProgrammingLanguage")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ExerciseId", "ProgrammingLanguage");
+
+                    b.ToTable("ExerciseLanguages");
+                });
+
             modelBuilder.Entity("PLDMS.Core.Entities.Group", b =>
                 {
                     b.Property<Guid>("Id")
@@ -405,19 +454,19 @@ namespace PLDMS.DL.Migrations
                     b.ToTable("Sessions");
                 });
 
-            modelBuilder.Entity("PLDMS.Core.Entities.SessionTask", b =>
+            modelBuilder.Entity("PLDMS.Core.Entities.SessionExercise", b =>
                 {
                     b.Property<Guid>("SessionId")
                         .HasColumnType("uuid");
 
-                    b.Property<long>("TaskId")
+                    b.Property<long>("ExerciseId")
                         .HasColumnType("bigint");
 
-                    b.HasKey("SessionId", "TaskId");
+                    b.HasKey("SessionId", "ExerciseId");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("ExerciseId");
 
-                    b.ToTable("SessionTasks");
+                    b.ToTable("SessionExercises");
                 });
 
             modelBuilder.Entity("PLDMS.Core.Entities.StudentCohort", b =>
@@ -469,14 +518,14 @@ namespace PLDMS.DL.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<long>("ExerciseId")
+                        .HasColumnType("bigint");
+
                     b.Property<Guid>("GroupId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("ProgrammingLanguage")
                         .HasColumnType("integer");
-
-                    b.Property<long>("TaskId")
-                        .HasColumnType("bigint");
 
                     b.Property<int[]>("Tests")
                         .IsRequired()
@@ -484,60 +533,11 @@ namespace PLDMS.DL.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ExerciseId");
+
                     b.HasIndex("GroupId");
 
-                    b.HasIndex("TaskId");
-
                     b.ToTable("Submissions");
-                });
-
-            modelBuilder.Entity("PLDMS.Core.Entities.Task", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
-
-                    b.Property<int>("Difficulty")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<int>("ProgramId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProgramId");
-
-                    b.ToTable("Tasks");
-                });
-
-            modelBuilder.Entity("PLDMS.Core.Entities.TaskLanguage", b =>
-                {
-                    b.Property<long>("TaskId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("ProgrammingLanguage")
-                        .HasColumnType("integer");
-
-                    b.HasKey("TaskId", "ProgrammingLanguage");
-
-                    b.ToTable("TaskLanguages");
                 });
 
             modelBuilder.Entity("PLDMS.Core.Entities.TestCase", b =>
@@ -547,6 +547,9 @@ namespace PLDMS.DL.Migrations
                         .HasColumnType("bigint");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("ExerciseId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Input")
                         .IsRequired()
@@ -561,12 +564,9 @@ namespace PLDMS.DL.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<long>("TaskId")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("ExerciseId");
 
                     b.ToTable("TestCases");
                 });
@@ -633,6 +633,28 @@ namespace PLDMS.DL.Migrations
                     b.Navigation("Program");
                 });
 
+            modelBuilder.Entity("PLDMS.Core.Entities.Exercise", b =>
+                {
+                    b.HasOne("PLDMS.Core.Entities.Program", "Program")
+                        .WithMany()
+                        .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Program");
+                });
+
+            modelBuilder.Entity("PLDMS.Core.Entities.ExerciseLanguage", b =>
+                {
+                    b.HasOne("PLDMS.Core.Entities.Exercise", "Exercise")
+                        .WithMany("ExerciseLanguages")
+                        .HasForeignKey("ExerciseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Exercise");
+                });
+
             modelBuilder.Entity("PLDMS.Core.Entities.Group", b =>
                 {
                     b.HasOne("PLDMS.Core.Entities.Session", "Session")
@@ -682,23 +704,23 @@ namespace PLDMS.DL.Migrations
                     b.Navigation("Cohort");
                 });
 
-            modelBuilder.Entity("PLDMS.Core.Entities.SessionTask", b =>
+            modelBuilder.Entity("PLDMS.Core.Entities.SessionExercise", b =>
                 {
+                    b.HasOne("PLDMS.Core.Entities.Exercise", "Exercise")
+                        .WithMany()
+                        .HasForeignKey("ExerciseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("PLDMS.Core.Entities.Session", "Session")
-                        .WithMany("Tasks")
+                        .WithMany("Exercises")
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PLDMS.Core.Entities.Task", "Task")
-                        .WithMany()
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.Navigation("Exercise");
 
                     b.Navigation("Session");
-
-                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("PLDMS.Core.Entities.StudentCohort", b =>
@@ -741,54 +763,32 @@ namespace PLDMS.DL.Migrations
 
             modelBuilder.Entity("PLDMS.Core.Entities.Submission", b =>
                 {
+                    b.HasOne("PLDMS.Core.Entities.Exercise", "Exercise")
+                        .WithMany()
+                        .HasForeignKey("ExerciseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("PLDMS.Core.Entities.Group", "Group")
                         .WithMany("Submissions")
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("PLDMS.Core.Entities.Task", "Task")
-                        .WithMany()
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.Navigation("Exercise");
 
                     b.Navigation("Group");
-
-                    b.Navigation("Task");
-                });
-
-            modelBuilder.Entity("PLDMS.Core.Entities.Task", b =>
-                {
-                    b.HasOne("PLDMS.Core.Entities.Program", "Program")
-                        .WithMany()
-                        .HasForeignKey("ProgramId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Program");
-                });
-
-            modelBuilder.Entity("PLDMS.Core.Entities.TaskLanguage", b =>
-                {
-                    b.HasOne("PLDMS.Core.Entities.Task", "Task")
-                        .WithMany("TaskLanguages")
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("PLDMS.Core.Entities.TestCase", b =>
                 {
-                    b.HasOne("PLDMS.Core.Entities.Task", "Task")
+                    b.HasOne("PLDMS.Core.Entities.Exercise", "Exercise")
                         .WithMany("TestCases")
-                        .HasForeignKey("TaskId")
+                        .HasForeignKey("ExerciseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Task");
+                    b.Navigation("Exercise");
                 });
 
             modelBuilder.Entity("PLDMS.Core.Entities.AppUser", b =>
@@ -803,6 +803,13 @@ namespace PLDMS.DL.Migrations
                     b.Navigation("Sessions");
                 });
 
+            modelBuilder.Entity("PLDMS.Core.Entities.Exercise", b =>
+                {
+                    b.Navigation("ExerciseLanguages");
+
+                    b.Navigation("TestCases");
+                });
+
             modelBuilder.Entity("PLDMS.Core.Entities.Group", b =>
                 {
                     b.Navigation("Students");
@@ -812,16 +819,9 @@ namespace PLDMS.DL.Migrations
 
             modelBuilder.Entity("PLDMS.Core.Entities.Session", b =>
                 {
+                    b.Navigation("Exercises");
+
                     b.Navigation("Groups");
-
-                    b.Navigation("Tasks");
-                });
-
-            modelBuilder.Entity("PLDMS.Core.Entities.Task", b =>
-                {
-                    b.Navigation("TaskLanguages");
-
-                    b.Navigation("TestCases");
                 });
 #pragma warning restore 612, 618
         }

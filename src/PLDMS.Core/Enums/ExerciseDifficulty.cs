@@ -1,6 +1,6 @@
 ﻿namespace PLDMS.Core.Enums;
 
-public enum TaskDifficulty
+public enum ExerciseDifficulty
 {
     Easy,
     Medium,
