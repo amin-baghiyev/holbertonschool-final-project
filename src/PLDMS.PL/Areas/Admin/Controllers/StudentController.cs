@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace PLDMS.PL.Areas.Admin.Controllers;
 
 [Area("Admin")]
-public class MentorController : Controller
+[Authorize(Roles = "Admin")]
+public class StudentController : Controller
 {
     // GET
     public IActionResult Index()

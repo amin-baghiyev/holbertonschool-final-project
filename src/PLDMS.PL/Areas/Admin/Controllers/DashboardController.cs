@@ -1,10 +1,12 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace PLDMS.PL.Areas.Admin.Controllers;
 
-public class Dashboard : Controller
+[Area("Admin")]
+[Authorize(Roles = "Admin")]
+public class DashboardController : Controller
 {
-    // GET
     public IActionResult Index()
     {
         return View();
