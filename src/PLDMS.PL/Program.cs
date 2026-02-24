@@ -56,12 +56,6 @@ using (var scope = app.Services.CreateScope())
     await IdentitySeeder.SeedAdminAsync(services);
 }
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
-}
-
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
