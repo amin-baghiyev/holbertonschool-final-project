@@ -17,13 +17,15 @@ public class AccountService : IAccountService
         _singInManager = singInManager;
     }
 
-    public async Task LoginAsync(UserLoginDTO dto)
+    public async Task<AppUser> LoginAsync(UserLoginDTO dto)
     {
         AppUser user = await _userManager.FindByEmailAsync(dto.Email) ?? throw new BaseException("Credentials are wrong");
 
         SignInResult res = await _singInManager.PasswordSignInAsync(user, dto.Password, false, true);
 
         if (!res.Succeeded) throw new BaseException("Credentials are wrong");
+
+        return user;
     }
 
     public async Task LogoutAsync()

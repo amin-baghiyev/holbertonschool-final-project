@@ -17,6 +17,18 @@ public class AccountController : Controller
     [HttpGet]
     public IActionResult Index()
     {
+        if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            if (User.IsInRole(UserRole.Admin.ToString()))
+                return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+
+            if (User.IsInRole(UserRole.Mentor.ToString()))
+                return RedirectToAction("Index", "Session", new { area = "Mentor" });
+
+            if (User.IsInRole(UserRole.Student.ToString()))
+                return RedirectToAction("Index", "Dashboard", new { area = "Student" });
+        }
+        
         return View();
     }
 
@@ -29,11 +41,18 @@ public class AccountController : Controller
             return View(dto);
         }
 
-        await _service.LoginAsync(dto);
-        return Redirect(returnUrl ?? (User.IsInRole(UserRole.Admin.ToString()) ? "/admin" : "/"));
+        var user = await _service.LoginAsync(dto);
+        
+        return user.Role switch
+        {
+            UserRole.Admin => RedirectToAction("Index", "Dashboard", new { area = "Admin" }),
+            UserRole.Mentor => RedirectToAction("Index", "Session", new { area = "Mentor" }),
+            UserRole.Student => RedirectToAction("Index", "Dashboard", new { area = "Student" }),
+            _ => RedirectToAction("Index", "Account")
+        };
     }
 
-    [HttpGet]
+    [HttpPost]
     public async Task<IActionResult> Logout()
     {
         await _service.LogoutAsync();

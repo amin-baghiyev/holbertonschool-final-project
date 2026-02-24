@@ -39,8 +39,9 @@ builder.Services.AddBLServices();
 
 builder.Services.ConfigureApplicationCookie(opt =>
 {
-    opt.LoginPath = "/account/login";
+    opt.LoginPath = "/";
     opt.AccessDeniedPath = "/";
+    opt.LogoutPath = "/";
 });
 
 var app = builder.Build();

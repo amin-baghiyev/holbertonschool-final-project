@@ -22,11 +22,11 @@ public class IdentitySeeder
         if (!await roleManager.RoleExistsAsync(roleName))
             await roleManager.CreateAsync(new IdentityRole<Guid>(roleName));
 
-        var user = await userManager.FindByEmailAsync(email);
+        var admin = await userManager.FindByEmailAsync(email);
 
-        if (user == null)
+        if (admin == null)
         {
-            user = new AppUser
+            admin = new AppUser
             {
                 Id = Guid.NewGuid(),
                 Email = email,
@@ -36,10 +36,10 @@ public class IdentitySeeder
                 CreatedAt = DateTime.UtcNow
             };
 
-            var result = await userManager.CreateAsync(user, password);
+            var result = await userManager.CreateAsync(admin, password);
 
             if (result.Succeeded)
-                await userManager.AddToRoleAsync(user, roleName);
+                await userManager.AddToRoleAsync(admin, roleName);
         }
     }
 

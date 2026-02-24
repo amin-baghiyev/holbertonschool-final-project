@@ -17,4 +17,13 @@
       </PackageReference>
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Areas\Mentor\Views\Dashboard\Index.cshtml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Areas\Student\Views\Shared\_Head.cshtml" />
+      <AdditionalFiles Include="Areas\Student\Views\Shared\_Sidebar.cshtml" />
+    </ItemGroup>
+
 </Project>
