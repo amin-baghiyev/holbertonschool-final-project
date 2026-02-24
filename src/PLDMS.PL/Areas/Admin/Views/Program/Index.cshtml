@@ -1,37 +1,58 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PLD Dashboard - Admin</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@@phosphor-icons/web"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            red: '#E03C31',
-                            dark: '#141729',
-                            light: '#F9FAFB'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-</head>
+@await Html.PartialAsync("_Head")
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
     <div class="flex h-screen overflow-hidden">
         @await Html.PartialAsync("_Sidebar")
 
-        test
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
+                <h1 class="text-xl font-bold text-gray-800">Programs</h1>
+            </header>
+            <div class="flex-1 overflow-y-auto p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-semibold">Educational Programs</h2>
+                    <button class="flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium">
+                        <i class="ph ph-plus-circle text-lg"></i> Add Program
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-blue-50 text-blue-600 rounded-lg"><i class="ph ph-code text-2xl"></i></div>
+                            <div class="flex gap-2">
+                                <button class="text-gray-400 hover:text-blue-600"><i class="ph ph-pencil-simple text-lg"></i></button>
+                                <button class="text-gray-400 hover:text-brand-red"><i class="ph ph-trash text-lg"></i></button>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Full-Stack Development</h3>
+                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">A comprehensive program covering frontend and backend technologies including JS, React, Node.js, and Databases.</p>
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                            <div class="flex items-center gap-2 text-sm text-gray-600"><i class="ph ph-clock"></i> 6 Months</div>
+                            <span class="text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded">Active</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-purple-50 text-purple-600 rounded-lg"><i class="ph ph-database text-2xl"></i></div>
+                            <div class="flex gap-2">
+                                <button class="text-gray-400 hover:text-blue-600"><i class="ph ph-pencil-simple text-lg"></i></button>
+                                <button class="text-gray-400 hover:text-brand-red"><i class="ph ph-trash text-lg"></i></button>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Data Science & ML</h3>
+                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">Learn Python, data analysis, machine learning algorithms, and how to build predictive models.</p>
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                            <div class="flex items-center gap-2 text-sm text-gray-600"><i class="ph ph-clock"></i> 8 Months</div>
+                            <span class="text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded">Active</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 </body>
 </html>

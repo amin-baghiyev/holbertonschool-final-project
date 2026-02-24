@@ -1,37 +1,76 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PLD Dashboard - Admin</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@@phosphor-icons/web"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            red: '#E03C31',
-                            dark: '#141729',
-                            light: '#F9FAFB'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-</head>
+@await Html.PartialAsync("_Head")
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
     <div class="flex h-screen overflow-hidden">
         @await Html.PartialAsync("_Sidebar")
 
-        test
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
+                <h1 class="text-xl font-bold text-gray-800">Cohorts Management</h1>
+            </header>
+            <div class="flex-1 overflow-y-auto p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="relative w-96">
+                        <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" placeholder="Search cohorts..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red">
+                    </div>
+                    <button class="flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors">
+                        <i class="ph ph-plus-circle text-lg"></i> Add New Cohort
+                    </button>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200 text-sm font-semibold text-gray-600">
+                                <th class="px-6 py-4">Cohort Name</th>
+                                <th class="px-6 py-4">Program</th>
+                                <th class="px-6 py-4">Duration (Start - End)</th>
+                                <th class="px-6 py-4">Students</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 text-sm">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 font-medium text-gray-900">C20 - Web Dev</td>
+                                <td class="px-6 py-4 text-gray-600">Full-Stack Development</td>
+                                <td class="px-6 py-4 text-gray-600">01 Oct 2023 - 01 Apr 2024</td>
+                                <td class="px-6 py-4"><span class="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg font-medium">45</span></td>
+                                <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Active</span></td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="p-1.5 text-gray-500 hover:text-blue-600"><i class="ph ph-pencil-simple text-lg"></i></button>
+                                    <button class="p-1.5 text-gray-500 hover:text-brand-red"><i class="ph ph-trash text-lg"></i></button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 font-medium text-gray-900">C21 - Data Sci</td>
+                                <td class="px-6 py-4 text-gray-600">Data Science & ML</td>
+                                <td class="px-6 py-4 text-gray-600">15 Nov 2023 - 15 May 2024</td>
+                                <td class="px-6 py-4"><span class="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg font-medium">32</span></td>
+                                <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Active</span></td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="p-1.5 text-gray-500 hover:text-blue-600"><i class="ph ph-pencil-simple text-lg"></i></button>
+                                    <button class="p-1.5 text-gray-500 hover:text-brand-red"><i class="ph ph-trash text-lg"></i></button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 bg-gray-50/50">
+                                <td class="px-6 py-4 font-medium text-gray-600">C19 - UI/UX</td>
+                                <td class="px-6 py-4 text-gray-500">Product Design</td>
+                                <td class="px-6 py-4 text-gray-500">01 Mar 2023 - 01 Sep 2023</td>
+                                <td class="px-6 py-4"><span class="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg font-medium">28</span></td>
+                                <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-600">Finished</span></td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="p-1.5 text-gray-500 hover:text-blue-600"><i class="ph ph-eye text-lg"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
 </body>
 </html>

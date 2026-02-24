@@ -6,7 +6,162 @@
     <div class="flex h-screen overflow-hidden">
         @await Html.PartialAsync("_Sidebar")
 
-        test
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
+                <div class="flex items-center gap-2">
+                    <h1 class="text-xl font-bold text-gray-800">Mentors</h1>
+                    <span class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">134 Active</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="p-2 text-gray-500 hover:bg-gray-100 rounded-full relative">
+                        <i class="ph ph-bell text-xl"></i>
+                        <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-brand-red rounded-full border-2 border-white"></span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-8">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+                    <div class="relative w-full sm:w-96">
+                        <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
+                        <input type="text" placeholder="Search by fullname, email or phone..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red transition-colors">
+                    </div>
+                    
+                    <button onclick="window.location.href='create-user.html?role=mentor'" class="flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm whitespace-nowrap">
+                        <i class="ph ph-plus-circle text-lg"></i>
+                        Add New Mentor
+                    </button>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-200 text-sm font-semibold text-gray-600">
+                                    <th class="px-6 py-4">Fullname</th>
+                                    <th class="px-6 py-4">Contact Info</th>
+                                    <th class="px-6 py-4">Date Added</th>
+                                    <th class="px-6 py-4">Status</th>
+                                    <th class="px-6 py-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 text-sm">
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <img src="https://ui-avatars.com/api/?name=Elvin+Qasimov&background=EBF4FF&color=1E40AF" class="w-9 h-9 rounded-full">
+                                            <div>
+                                                <p class="font-medium text-gray-900">Elvin Qasımov</p>
+                                                <p class="text-xs text-gray-500">ID: MEN-001</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <p class="text-gray-800">elvin.q@example.com</p>
+                                        <p class="text-gray-500 text-xs mt-0.5">+994 50 123 45 67</p>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-600">
+                                        12 Jan 2024
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                            Active
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex justify-end gap-2">
+                                            <button class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Edit">
+                                                <i class="ph ph-pencil-simple text-lg"></i>
+                                            </button>
+                                            <button class="p-1.5 text-gray-500 hover:text-brand-red hover:bg-red-50 rounded transition-colors" title="Delete">
+                                                <i class="ph ph-trash text-lg"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <img src="https://ui-avatars.com/api/?name=Aysel+Mammadova&background=FCE7F3&color=9D174D" class="w-9 h-9 rounded-full">
+                                            <div>
+                                                <p class="font-medium text-gray-900">Aysel Məmmədova</p>
+                                                <p class="text-xs text-gray-500">ID: MEN-002</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <p class="text-gray-800">aysel.m@example.com</p>
+                                        <p class="text-gray-500 text-xs mt-0.5">+994 55 987 65 43</p>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-600">
+                                        05 Feb 2024
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                            Active
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex justify-end gap-2">
+                                            <button class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Edit">
+                                                <i class="ph ph-pencil-simple text-lg"></i>
+                                            </button>
+                                            <button class="p-1.5 text-gray-500 hover:text-brand-red hover:bg-red-50 rounded transition-colors" title="Delete">
+                                                <i class="ph ph-trash text-lg"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <tr class="bg-gray-50/50 hover:bg-gray-50 transition-colors opacity-75">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <img src="https://ui-avatars.com/api/?name=Tarlan+Aliyev&background=F3F4F6&color=4B5563" class="w-9 h-9 rounded-full grayscale">
+                                            <div>
+                                                <p class="font-medium text-gray-600">Tərlan Əliyev</p>
+                                                <p class="text-xs text-gray-500">ID: MEN-003</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <p class="text-gray-600">tarlan.a@example.com</p>
+                                        <p class="text-gray-500 text-xs mt-0.5">+994 70 456 78 90</p>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-500">
+                                        20 Nov 2023
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-600">
+                                            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                                            Deleted
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex justify-end gap-2">
+                                            <button class="p-1.5 text-gray-400 hover:text-gray-800 hover:bg-gray-200 rounded transition-colors" title="Restore">
+                                                <i class="ph ph-arrow-counter-clockwise text-lg"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                        <p class="text-sm text-gray-500">Showing <span class="font-medium text-gray-900">1</span> to <span class="font-medium text-gray-900">10</span> of <span class="font-medium text-gray-900">134</span> mentors</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>Previous</button>
+                            <button class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">Next</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
     </div>
 </body>
 </html>
