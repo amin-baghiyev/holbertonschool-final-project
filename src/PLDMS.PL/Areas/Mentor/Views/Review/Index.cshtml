@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+@await Html.PartialAsync("_Head")
+<body class="bg-gray-50 font-sans antialiased">
+<div class="flex h-screen overflow-hidden">
+    @await Html.PartialAsync("_Sidebar")
+<main class="flex-1 flex flex-col overflow-hidden">
+    <div class="p-8">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold mb-2">Submission Reviews</h2>
+            <p class="text-sm text-gray-500">Only finished sessions are eligible for review.</p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200">
+            <div class="p-4 border-b flex justify-between items-center">
+                <div class="flex gap-2">
+                    <button class="px-3 py-1 bg-brand-dark text-white rounded-full text-xs">All</button>
+                    <button class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">Pending</button>
+                    <button class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">Under Review</button>
+                </div>
+            </div>
+
+            <div class="divide-y">
+                <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
+                            G1
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm">Group: Cyber-Warriors</h4>
+                            <p class="text-xs text-gray-500">Task: System Architecture Design • Cohort 19</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-6">
+                        <div class="text-center">
+                            <p class="text-xs text-gray-400 uppercase font-bold">Auto-Score</p>
+                            <p class="text-sm font-bold text-green-600">8/10 Tests</p>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 border rounded-lg text-xs font-bold hover:bg-gray-50">
+                                Assign Peer Reviewer
+                            </button>
+                            <button class="px-3 py-1.5 bg-brand-red text-white rounded-lg text-xs font-bold hover:bg-red-700">
+                                Review Personally
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
+                            G1
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm">Group: Cyber-Warriors</h4>
+                            <p class="text-xs text-gray-500">Task: System Architecture Design • Cohort 19</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-6">
+                        <div class="text-center">
+                            <p class="text-xs text-gray-400 uppercase font-bold">Auto-Score</p>
+                            <p class="text-sm font-bold text-green-600">8/10 Tests</p>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 border rounded-lg text-xs font-bold hover:bg-gray-50">
+                                Assign Peer Reviewer
+                            </button>
+                            <button class="px-3 py-1.5 bg-brand-red text-white rounded-lg text-xs font-bold hover:bg-red-700">
+                                Review Personally
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </main>
+</div>
+</body>
+</html>
