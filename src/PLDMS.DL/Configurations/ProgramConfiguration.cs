@@ -13,9 +13,8 @@ public class ProgramConfiguration : IEntityTypeConfiguration<Program>
             .HasMaxLength(150);
 
         builder.Property(p => p.Duration)
-           .HasColumnType("interval")
-           .IsRequired();
-
+            .IsRequired();
+        
         builder.Property(p => p.IsDeleted)
             .HasDefaultValue(false);
     }

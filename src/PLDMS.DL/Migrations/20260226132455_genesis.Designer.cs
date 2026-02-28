@@ -12,7 +12,7 @@ using PLDMS.DL.Contexts;
 namespace PLDMS.DL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260223143913_genesis")]
+    [Migration("20260226132455_genesis")]
     partial class genesis
     {
         /// <inheritdoc />
@@ -350,8 +350,8 @@ namespace PLDMS.DL.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<TimeSpan>("Duration")
-                        .HasColumnType("interval");
+                    b.Property<int>("Duration")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
