@@ -1,57 +1,58 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-@await Html.PartialAsync("_Head")
-<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+﻿<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
+    <h1 class="text-xl font-bold text-gray-800">Reports & Analytics</h1>
+    <button
+        class="flex items-center gap-2 border border-gray-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50">
+        <i class="ph ph-download-simple"></i> Export CSV
+    </button>
+</header>
 
-<div class="flex h-screen overflow-hidden">
-    @await Html.PartialAsync("_Sidebar")
+<div class="flex-1 overflow-y-auto p-8 space-y-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <div class="text-sm text-gray-500 mb-1">Total Submissions</div>
+            <div class="text-3xl font-bold text-gray-900">12,450</div>
+            <div class="text-sm text-green-600 mt-2 flex items-center"><i class="ph ph-trend-up mr-1"></i> +15% this
+                month
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <div class="text-sm text-gray-500 mb-1">Avg. Peer Review Score</div>
+            <div class="text-3xl font-bold text-gray-900">8.4<span class="text-lg text-gray-400 font-medium">/10</span>
+            </div>
+            <div class="text-sm text-gray-500 mt-2">Across all active cohorts</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <div class="text-sm text-gray-500 mb-1">Total Finished Sessions</div>
+            <div class="text-3xl font-bold text-gray-900">342</div>
+            <div class="text-sm text-gray-500 mt-2">Historical data</div>
+        </div>
+    </div>
 
-    <main class="flex-1 flex flex-col overflow-hidden">
-            <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
-                <h1 class="text-xl font-bold text-gray-800">Reports & Analytics</h1>
-                <button class="flex items-center gap-2 border border-gray-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50">
-                    <i class="ph ph-download-simple"></i> Export CSV
-                </button>
-            </header>
-            
-            <div class="flex-1 overflow-y-auto p-8 space-y-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                        <div class="text-sm text-gray-500 mb-1">Total Submissions</div>
-                        <div class="text-3xl font-bold text-gray-900">12,450</div>
-                        <div class="text-sm text-green-600 mt-2 flex items-center"><i class="ph ph-trend-up mr-1"></i> +15% this month</div>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                        <div class="text-sm text-gray-500 mb-1">Avg. Peer Review Score</div>
-                        <div class="text-3xl font-bold text-gray-900">8.4<span class="text-lg text-gray-400 font-medium">/10</span></div>
-                        <div class="text-sm text-gray-500 mt-2">Across all active cohorts</div>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                        <div class="text-sm text-gray-500 mb-1">Total Finished Sessions</div>
-                        <div class="text-3xl font-bold text-gray-900">342</div>
-                        <div class="text-sm text-gray-500 mt-2">Historical data</div>
-                    </div>
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <h2 class="text-lg font-bold text-gray-800 mb-6">Program Popularity (Active Students)</h2>
+        <div class="space-y-4">
+            <div>
+                <div class="flex justify-between text-sm mb-1"><span
+                                                                   class="font-medium">Full-Stack Development</span><span class="text-gray-500">650 Students</span>
                 </div>
-
-                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                    <h2 class="text-lg font-bold text-gray-800 mb-6">Program Popularity (Active Students)</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between text-sm mb-1"><span class="font-medium">Full-Stack Development</span><span class="text-gray-500">650 Students</span></div>
-                            <div class="w-full bg-gray-100 rounded-full h-2.5"><div class="bg-brand-red h-2.5 rounded-full" style="width: 70%"></div></div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm mb-1"><span class="font-medium">Data Science & ML</span><span class="text-gray-500">320 Students</span></div>
-                            <div class="w-full bg-gray-100 rounded-full h-2.5"><div class="bg-blue-500 h-2.5 rounded-full" style="width: 45%"></div></div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm mb-1"><span class="font-medium">UI/UX Design</span><span class="text-gray-500">238 Students</span></div>
-                            <div class="w-full bg-gray-100 rounded-full h-2.5"><div class="bg-purple-500 h-2.5 rounded-full" style="width: 30%"></div></div>
-                        </div>
-                    </div>
+                <div class="w-full bg-gray-100 rounded-full h-2.5">
+                    <div class="bg-brand-red h-2.5 rounded-full" style="width: 70%"></div>
                 </div>
             </div>
-        </main>
+            <div>
+                <div class="flex justify-between text-sm mb-1"><span class="font-medium">Data Science & ML</span><span
+                                                                                                                     class="text-gray-500">320 Students</span></div>
+                <div class="w-full bg-gray-100 rounded-full h-2.5">
+                    <div class="bg-blue-500 h-2.5 rounded-full" style="width: 45%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between text-sm mb-1"><span class="font-medium">UI/UX Design</span><span
+                                                                                                                class="text-gray-500">238 Students</span></div>
+                <div class="w-full bg-gray-100 rounded-full h-2.5">
+                    <div class="bg-purple-500 h-2.5 rounded-full" style="width: 30%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-</body>
-</html>

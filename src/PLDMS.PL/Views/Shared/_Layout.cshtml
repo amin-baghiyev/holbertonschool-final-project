@@ -31,7 +31,10 @@
     <partial name="_Sidebar"/>
     <main class="flex-1 flex flex-col overflow-hidden">
         @RenderBody()
+        <partial name="_ConfirmModal"/>
     </main>
 </div>
+    <script type="module" src="~/js/confirm-modal.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

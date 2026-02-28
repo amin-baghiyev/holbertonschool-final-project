@@ -1,74 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
+<div class="p-8 space-y-6">
+    <div class="flex justify-between items-center">
+        <h2 class="text-2xl font-bold">Programming Tasks</h2>
+        <button class="bg-brand-dark text-white px-4 py-2 rounded-lg flex items-center gap-2">
+            <i class="ph ph-plus"></i> New Task
+        </button>
+    </div>
 
-@await Html.PartialAsync("_Head")
-<body class="bg-gray-50 font-sans antialiased">
-    <div class="flex h-screen overflow-hidden">
-        @await Html.PartialAsync("_Sidebar")
-        
-        <main class="flex-1 flex flex-col overflow-hidden">
-        <div class="p-8 space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-bold">Programming Tasks</h2>
-                <button class="bg-brand-dark text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                    <i class="ph ph-plus"></i> New Task
-                </button>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white border rounded-xl p-6 shadow-sm border-l-4 border-l-brand-red">
+            <div class="flex justify-between mb-4">
+                <span class="text-xs font-bold uppercase tracking-wider text-gray-400">ID: #TASK-42</span>
+                <span class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-bold">HARD</span>
+            </div>
+            <h3 class="text-lg font-bold mb-2">Implement Merge Sort in C</h3>
+            <p class="text-sm text-gray-600 mb-4 line-clamp-2">Efficiently sort a large array using divide and conquer
+                approach.</p>
+
+            <div class="flex items-center gap-4 mb-4">
+                <div class="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded">
+                    <i class="ph ph-terminal"></i> C, Python
+                </div>
+                <div class="text-xs text-gray-500">5 Test Cases</div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white border rounded-xl p-6 shadow-sm border-l-4 border-l-brand-red">
-                    <div class="flex justify-between mb-4">
-                        <span class="text-xs font-bold uppercase tracking-wider text-gray-400">ID: #TASK-42</span>
-                        <span class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-bold">HARD</span>
-                    </div>
-                    <h3 class="text-lg font-bold mb-2">Implement Merge Sort in C</h3>
-                    <p class="text-sm text-gray-600 mb-4 line-clamp-2">Efficiently sort a large array using divide and conquer approach.</p>
-            
-                    <div class="flex items-center gap-4 mb-4">
-                        <div class="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded">
-                            <i class="ph ph-terminal"></i> C, Python
-                        </div>
-                        <div class="text-xs text-gray-500">5 Test Cases</div>
-                    </div>
-
-                    <div class="flex justify-between items-center border-t pt-4">
-                        <button class="text-sm font-semibold text-brand-dark hover:text-brand-red flex items-center gap-1">
-                            <i class="ph ph-gear"></i> Manage Test Cases
-                        </button>
-                        <div class="flex gap-2">
-                            <button class="p-2 hover:bg-gray-100 rounded"><i class="ph ph-pencil"></i></button>
-                            <button class="p-2 hover:bg-red-50 text-brand-red rounded"><i class="ph ph-trash"></i></button>
-                        </div>
-                    </div>
+            <div class="flex justify-between items-center border-t pt-4">
+                <button class="text-sm font-semibold text-brand-dark hover:text-brand-red flex items-center gap-1">
+                    <i class="ph ph-gear"></i> Manage Test Cases
+                </button>
+                <div class="flex gap-2">
+                    <button class="p-2 hover:bg-gray-100 rounded"><i class="ph ph-pencil"></i></button>
+                    <button class="p-2 hover:bg-red-50 text-brand-red rounded"><i class="ph ph-trash"></i></button>
                 </div>
-                <div class="bg-white border rounded-xl p-6 shadow-sm border-l-4 border-l-brand-red">
-                    <div class="flex justify-between mb-4">
-                        <span class="text-xs font-bold uppercase tracking-wider text-gray-400">ID: #TASK-42</span>
-                        <span class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-bold">HARD</span>
-                    </div>
-                    <h3 class="text-lg font-bold mb-2">Implement Merge Sort in C</h3>
-                    <p class="text-sm text-gray-600 mb-4 line-clamp-2">Efficiently sort a large array using divide and conquer approach.</p>
-            
-                    <div class="flex items-center gap-4 mb-4">
-                        <div class="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded">
-                            <i class="ph ph-terminal"></i> C, Python
-                        </div>
-                        <div class="text-xs text-gray-500">5 Test Cases</div>
-                    </div>
-
-                    <div class="flex justify-between items-center border-t pt-4">
-                        <button class="text-sm font-semibold text-brand-dark hover:text-brand-red flex items-center gap-1">
-                            <i class="ph ph-gear"></i> Manage Test Cases
-                        </button>
-                        <div class="flex gap-2">
-                            <button class="p-2 hover:bg-gray-100 rounded"><i class="ph ph-pencil"></i></button>
-                            <button class="p-2 hover:bg-red-50 text-brand-red rounded"><i class="ph ph-trash"></i></button>
-                        </div>
-                    </div>
-                </div>
-                </div>
+            </div>
         </div>
-        </main>
+        <div class="bg-white border rounded-xl p-6 shadow-sm border-l-4 border-l-brand-red">
+            <div class="flex justify-between mb-4">
+                <span class="text-xs font-bold uppercase tracking-wider text-gray-400">ID: #TASK-42</span>
+                <span class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-bold">HARD</span>
+            </div>
+            <h3 class="text-lg font-bold mb-2">Implement Merge Sort in C</h3>
+            <p class="text-sm text-gray-600 mb-4 line-clamp-2">Efficiently sort a large array using divide and conquer
+                approach.</p>
+
+            <div class="flex items-center gap-4 mb-4">
+                <div class="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded">
+                    <i class="ph ph-terminal"></i> C, Python
+                </div>
+                <div class="text-xs text-gray-500">5 Test Cases</div>
+            </div>
+
+            <div class="flex justify-between items-center border-t pt-4">
+                <button class="text-sm font-semibold text-brand-dark hover:text-brand-red flex items-center gap-1">
+                    <i class="ph ph-gear"></i> Manage Test Cases
+                </button>
+                <div class="flex gap-2">
+                    <button class="p-2 hover:bg-gray-100 rounded"><i class="ph ph-pencil"></i></button>
+                    <button class="p-2 hover:bg-red-50 text-brand-red rounded"><i class="ph ph-trash"></i></button>
+                </div>
+            </div>
+        </div>
     </div>
-</body>
-</html>
+</div>
+        

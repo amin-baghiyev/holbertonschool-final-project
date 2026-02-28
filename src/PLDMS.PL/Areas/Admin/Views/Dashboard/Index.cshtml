@@ -1,145 +1,142 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-@await Html.PartialAsync("_Head")
-<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+﻿<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
+    <h1 class="text-xl font-bold text-gray-800">Admin Overview</h1>
+    <div class="flex items-center gap-4">
+        <button class="p-2 text-gray-500 hover:bg-gray-100 rounded-full relative">
+            <i class="ph ph-bell text-xl"></i>
+            <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-brand-red rounded-full border-2 border-white"></span>
+        </button>
+    </div>
+</header>
 
-    <div class="flex h-screen overflow-hidden">
-        @await Html.PartialAsync("_Sidebar")
-
-        <main class="flex-1 flex flex-col overflow-hidden">
-            <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
-                <h1 class="text-xl font-bold text-gray-800">Admin Overview</h1>
-                <div class="flex items-center gap-4">
-                    <button class="p-2 text-gray-500 hover:bg-gray-100 rounded-full relative">
-                        <i class="ph ph-bell text-xl"></i>
-                        <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-brand-red rounded-full border-2 border-white"></span>
-                    </button>
+<div class="flex-1 overflow-y-auto p-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Total Users</p>
+                    <h3 class="text-3xl font-bold text-gray-900 mt-2">1,342</h3>
                 </div>
-            </header>
+                <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                    <i class="ph ph-users text-2xl"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm text-gray-500">
+                <span>1,208 Students • 134 Mentors</span>
+            </div>
+        </div>
 
-            <div class="flex-1 overflow-y-auto p-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">Total Users</p>
-                                <h3 class="text-3xl font-bold text-gray-900 mt-2">1,342</h3>
-                            </div>
-                            <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                                <i class="ph ph-users text-2xl"></i>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center text-sm text-gray-500">
-                            <span>1,208 Students • 134 Mentors</span>
-                        </div>
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Active Cohorts</p>
+                    <h3 class="text-3xl font-bold text-gray-900 mt-2">8</h3>
+                </div>
+                <div class="p-2 bg-purple-50 text-purple-600 rounded-lg">
+                    <i class="ph ph-stack text-2xl"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm text-green-600">
+                <i class="ph ph-arrow-up-right mr-1"></i>
+                <span>1 new starting next week</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Active Programs</p>
+                    <h3 class="text-3xl font-bold text-gray-900 mt-2">14</h3>
+                </div>
+                <div class="p-2 bg-orange-50 text-orange-600 rounded-lg">
+                    <i class="ph ph-book-open text-2xl"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm text-gray-500">
+                <span>Across 4 departments</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">New Registrations</p>
+                    <h3 class="text-3xl font-bold text-gray-900 mt-2">56</h3>
+                </div>
+                <div class="p-2 bg-green-50 text-green-600 rounded-lg">
+                    <i class="ph ph-user-circle-plus text-2xl"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm text-green-600">
+                <i class="ph ph-arrow-up-right mr-1"></i>
+                <span>+12% from last month</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-6">System Activity</h2>
+            <div class="space-y-6">
+                <div class="flex gap-4">
+                    <div
+                        class="w-10 h-10 rounded-full bg-brand-red text-white flex items-center justify-center flex-shrink-0">
+                        <i class="ph ph-user-plus text-lg"></i>
                     </div>
-
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">Active Cohorts</p>
-                                <h3 class="text-3xl font-bold text-gray-900 mt-2">8</h3>
-                            </div>
-                            <div class="p-2 bg-purple-50 text-purple-600 rounded-lg">
-                                <i class="ph ph-stack text-2xl"></i>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center text-sm text-green-600">
-                            <i class="ph ph-arrow-up-right mr-1"></i>
-                            <span>1 new starting next week</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">Active Programs</p>
-                                <h3 class="text-3xl font-bold text-gray-900 mt-2">14</h3>
-                            </div>
-                            <div class="p-2 bg-orange-50 text-orange-600 rounded-lg">
-                                <i class="ph ph-book-open text-2xl"></i>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center text-sm text-gray-500">
-                            <span>Across 4 departments</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">New Registrations</p>
-                                <h3 class="text-3xl font-bold text-gray-900 mt-2">56</h3>
-                            </div>
-                            <div class="p-2 bg-green-50 text-green-600 rounded-lg">
-                                <i class="ph ph-user-circle-plus text-2xl"></i>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center text-sm text-green-600">
-                            <i class="ph ph-arrow-up-right mr-1"></i>
-                            <span>+12% from last month</span>
-                        </div>
+                    <div>
+                        <p class="text-sm text-gray-800">New Mentor <span class="font-semibold">Elvin Qasımov</span>
+                            added to system</p>
+                        <p class="text-xs text-gray-500 mt-1">10 minutes ago • Added by Admin</p>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h2 class="text-lg font-bold text-gray-800 mb-6">System Activity</h2>
-                        <div class="space-y-6">
-                            <div class="flex gap-4">
-                                <div class="w-10 h-10 rounded-full bg-brand-red text-white flex items-center justify-center flex-shrink-0">
-                                    <i class="ph ph-user-plus text-lg"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-800">New Mentor <span class="font-semibold">Elvin Qasımov</span> added to system</p>
-                                    <p class="text-xs text-gray-500 mt-1">10 minutes ago • Added by Admin</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-4">
-                                <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
-                                    <i class="ph ph-stack text-lg"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-800">Cohort <span class="font-medium">Full-Stack Web Dev - C20</span> created</p>
-                                    <p class="text-xs text-gray-500 mt-1">2 hours ago • Starts on Oct 1</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-4">
-                                <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0">
-                                    <i class="ph ph-book-open text-lg"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-800">Program curriculum updated for <span class="font-semibold">Data Science</span></p>
-                                    <p class="text-xs text-gray-500 mt-1">5 hours ago • Version 2.4</p>
-                                </div>
-                            </div>
-                        </div>
+                <div class="flex gap-4">
+                    <div
+                        class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
+                        <i class="ph ph-stack text-lg"></i>
                     </div>
-
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h2 class="text-lg font-bold text-gray-800 mb-6">Admin Actions</h2>
-                        <div class="space-y-3">
-                            <button onclick="window.location.href='create-user.html'" class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-brand-red hover:text-brand-red transition-all group">
-                                <span class="font-medium text-sm">Add New User (Mentor/Student)</span>
-                                <i class="ph ph-user-plus text-gray-400 group-hover:text-brand-red"></i>
-                            </button>
-                            <button onclick="window.location.href='create-cohort.html'" class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-brand-red hover:text-brand-red transition-all group">
-                                <span class="font-medium text-sm">Create New Cohort</span>
-                                <i class="ph ph-stack-plus text-gray-400 group-hover:text-brand-red"></i>
-                            </button>
-                            <button onclick="window.location.href='create-program.html'" class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-brand-red hover:text-brand-red transition-all group">
-                                <span class="font-medium text-sm">Add New Program</span>
-                                <i class="ph ph-folder-plus text-gray-400 group-hover:text-brand-red"></i>
-                            </button>
-                            <button onclick="window.location.href='users.html'" class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-brand-red hover:text-brand-red transition-all group mt-6 bg-gray-50">
-                                <span class="font-medium text-sm">View All Users List</span>
-                                <i class="ph ph-list-dashes text-gray-400 group-hover:text-brand-red"></i>
-                            </button>
-                        </div>
+                    <div>
+                        <p class="text-sm text-gray-800">Cohort <span
+                                class="font-medium">Full-Stack Web Dev - C20</span> created</p>
+                        <p class="text-xs text-gray-500 mt-1">2 hours ago • Starts on Oct 1</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div
+                        class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0">
+                        <i class="ph ph-book-open text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-800">Program curriculum updated for <span class="font-semibold">Data Science</span>
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">5 hours ago • Version 2.4</p>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-6">Admin Actions</h2>
+            <div class="space-y-3">
+                <button onclick="window.location.href='create-user.html'"
+                        class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-brand-red hover:text-brand-red transition-all group">
+                    <span class="font-medium text-sm">Add New User (Mentor/Student)</span>
+                    <i class="ph ph-user-plus text-gray-400 group-hover:text-brand-red"></i>
+                </button>
+                <button onclick="window.location.href='create-cohort.html'"
+                        class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-brand-red hover:text-brand-red transition-all group">
+                    <span class="font-medium text-sm">Create New Cohort</span>
+                    <i class="ph ph-stack-plus text-gray-400 group-hover:text-brand-red"></i>
+                </button>
+                <button onclick="window.location.href='create-program.html'"
+                        class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-brand-red hover:text-brand-red transition-all group">
+                    <span class="font-medium text-sm">Add New Program</span>
+                    <i class="ph ph-folder-plus text-gray-400 group-hover:text-brand-red"></i>
+                </button>
+                <button onclick="window.location.href='users.html'"
+                        class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-brand-red hover:text-brand-red transition-all group mt-6 bg-gray-50">
+                    <span class="font-medium text-sm">View All Users List</span>
+                    <i class="ph ph-list-dashes text-gray-400 group-hover:text-brand-red"></i>
+                </button>
+            </div>
+        </div>
     </div>
-</body>
-</html>
+</div>

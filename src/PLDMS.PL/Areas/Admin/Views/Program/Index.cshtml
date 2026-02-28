@@ -1,58 +1,119 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-@await Html.PartialAsync("_Head")
-<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+﻿@using PLDMS.BL.DTOs.ProgramDTOs
+@model ICollection<ProgramItemDTO>
 
-    <div class="flex h-screen overflow-hidden">
-        @await Html.PartialAsync("_Sidebar")
+@{
+    var hasSearch = !string.IsNullOrWhiteSpace(Context.Request.Query["q"]);
+}
+<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
+    <h1 class="text-xl font-bold text-gray-800">Programs</h1>
+</header>
 
-        <main class="flex-1 flex flex-col overflow-hidden">
-            <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
-                <h1 class="text-xl font-bold text-gray-800">Programs</h1>
-            </header>
-            <div class="flex-1 overflow-y-auto p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-lg font-semibold">Educational Programs</h2>
-                    <button class="flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium">
-                        <i class="ph ph-plus-circle text-lg"></i> Add Program
-                    </button>
-                </div>
+<div class="flex-1 overflow-y-auto p-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h2 class="text-lg font-semibold text-gray-900">Educational Programs</h2>
+            <p class="text-sm text-gray-500">Manage your curriculum and program durations.</p>
+        </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="p-3 bg-blue-50 text-blue-600 rounded-lg"><i class="ph ph-code text-2xl"></i></div>
-                            <div class="flex gap-2">
-                                <button class="text-gray-400 hover:text-blue-600"><i class="ph ph-pencil-simple text-lg"></i></button>
-                                <button class="text-gray-400 hover:text-brand-red"><i class="ph ph-trash text-lg"></i></button>
-                            </div>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">Full-Stack Development</h3>
-                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">A comprehensive program covering frontend and backend technologies including JS, React, Node.js, and Databases.</p>
-                        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-                            <div class="flex items-center gap-2 text-sm text-gray-600"><i class="ph ph-clock"></i> 6 Months</div>
-                            <span class="text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded">Active</span>
-                        </div>
-                    </div>
+        <div class="flex gap-3">
+            <form asp-action="Index" method="get" class="flex items-center bg-white border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-brand-red/20 transition-all">
+                <i class="ph ph-magnifying-glass text-gray-400 mr-2"></i>
+                <input type="text" name="q" value="@Context.Request.Query["q"]" 
+                       placeholder="Filter by name..." 
+                       class="outline-none text-sm w-40 md:w-64 bg-transparent">
+                @if (!string.IsNullOrEmpty(Context.Request.Query["q"]))
+                {
+                    <a asp-action="Index" class="ml-2 text-gray-400 hover:text-brand-red">
+                        <i class="ph ph-x-circle"></i>
+                    </a>
+                }
+            </form>
 
-                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="p-3 bg-purple-50 text-purple-600 rounded-lg"><i class="ph ph-database text-2xl"></i></div>
-                            <div class="flex gap-2">
-                                <button class="text-gray-400 hover:text-blue-600"><i class="ph ph-pencil-simple text-lg"></i></button>
-                                <button class="text-gray-400 hover:text-brand-red"><i class="ph ph-trash text-lg"></i></button>
-                            </div>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">Data Science & ML</h3>
-                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">Learn Python, data analysis, machine learning algorithms, and how to build predictive models.</p>
-                        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-                            <div class="flex items-center gap-2 text-sm text-gray-600"><i class="ph ph-clock"></i> 8 Months</div>
-                            <span class="text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded">Active</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
+            <button
+                    class="add-program flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm">
+                <i class="ph ph-plus-circle text-lg"></i> 
+                <span class="hidden sm:inline">Add Program</span>
+            </button>
+        </div>
+        <partial name="_ProgramModal" model="new ProgramFormDTO()" />
+        
     </div>
-</body>
-</html>
+
+    @if (!string.IsNullOrEmpty(Context.Request.Query["q"]))
+    {
+        <div class="mb-4 text-sm text-gray-600">
+            Showing results for: <span class="font-bold text-brand-red">"@Context.Request.Query["q"]"</span>
+        </div>
+    }
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @if (Model.Count != 0)
+        {
+            foreach (var item in Model)
+            {
+                var isDeleted = item.IsDeleted;
+                var actionType = isDeleted ? "enable" : "disable";
+                var hoverColor = isDeleted ? "hover:text-green-600" : "hover:text-brand-red";
+            
+                <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="p-3 bg-blue-50 text-blue-600 rounded-lg"><i class="ph ph-code text-2xl"></i></div>
+                        <div class="flex gap-2">
+                            <button 
+                                class="edit-btn text-gray-400 hover:text-blue-600"
+                                data-id="@item.Id"
+                                data-name="@item.Name"
+                                data-duration="@item.Duration">
+                                <i class="ph ph-pencil-simple text-lg"></i>
+                            </button>
+                            
+                            <button data-id="@item.Id" data-type="delete" data-name="@item.Name" class="trash-btn text-gray-400 hover:text-brand-red"><i class="ph ph-trash text-lg"></i></button>
+                            
+                            <button data-id="@item.Id"
+                                    data-type="@actionType"
+                                    data-name="@item.Name"
+                                    class="power-btn text-gray-400 @hoverColor">
+                                <i class="ph ph-power text-lg"></i>
+                            </button>
+                    </div>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">@item.Name</h3>
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                            <i class="ph ph-clock"></i> @item.Duration Months
+                        </div>
+                        <span class="text-xs font-medium @(isDeleted ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700") px-2 py-1 rounded">
+                            @(isDeleted ? "Deactive" : "Active")
+                        </span>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            if (hasSearch)
+            {
+                <div class="col-span-full py-12 text-center bg-gray-50 border border-dashed rounded-xl">
+                    <i class="ph ph-magnifying-glass text-4xl text-gray-300 mb-2"></i>
+                    <p class="text-gray-500">
+                        No programs found matching your search.
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="col-span-full py-12 text-center bg-gray-50 border border-dashed rounded-xl">
+                    <i class="ph ph-folder-open text-4xl text-gray-300 mb-2"></i>
+                    <p class="text-gray-500">
+                        There are no programs yet.
+                    </p>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+
+@section Scripts {
+    <script type="module" src="~/js/admin/program.js"></script>
+}
