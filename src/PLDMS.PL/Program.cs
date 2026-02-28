@@ -4,6 +4,7 @@ using PLDMS.BL;
 using PLDMS.Core.Entities;
 using PLDMS.DL;
 using PLDMS.DL.Contexts;
+using PLDMS.PL.Common;
 using PLDMS.PL.Extensions;
 using PLDMS.PL.Middlewares;
 
@@ -33,6 +34,8 @@ builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
     })
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, AppUserClaimsPrincipalFactory>();
 
 builder.Services.AddDLServices();
 builder.Services.AddBLServices();
