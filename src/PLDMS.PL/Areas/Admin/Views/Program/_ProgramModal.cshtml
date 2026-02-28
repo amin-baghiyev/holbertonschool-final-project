@@ -1,0 +1,36 @@
+@using PLDMS.BL.DTOs.ProgramDTOs
+@model ProgramFormDTO
+
+<div id="addProgramModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity" onclick="closeModal()"></div>
+
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div id="modalContent" class="relative bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <form id="createProgramForm">
+                @Html.AntiForgeryToken()
+                
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-6">Create New Program</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Program Name</label>
+                            <input asp-for="Name" type="text" class="w-full mt-1 border rounded-lg p-2.5 focus:ring-brand-red outline-none">
+                            <span asp-validation-for="Name" class="text-red-500 text-xs mt-1"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Duration (Months)</label>
+                            <input asp-for="Duration" type="number" class="w-full mt-1 border rounded-lg p-2.5 outline-none">
+                            <span asp-validation-for="Duration" class="text-red-500 text-xs mt-1"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">Cancel</button>
+                    <button type="submit" class="bg-brand-red text-white px-6 py-2 rounded-lg font-medium">Save Program</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -18,5 +18,6 @@ public static class ConfigurationServices
         services.AddFluentValidationClientsideAdapters();
 
         services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<IProgramService, ProgramService>();
     }
 }
