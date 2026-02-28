@@ -53,7 +53,7 @@ using (var scope = app.Services.CreateScope())
     var db = services.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
 
-    await IdentitySeeder.SeedAdminAsync(services);
+    await IdentitySeeder.SeedAsync(services);
 }
 
 app.UseStaticFiles();
