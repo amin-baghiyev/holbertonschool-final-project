@@ -8,7 +8,7 @@ public interface IRepository<T> where T : class, new()
 {
     DbSet<T> Table { get; }
 
-    Task<ICollection<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null, int page = 0, int count = 0,
+    Task<(ICollection<T> Items, int TotalCount)> GetAllAsync(Expression<Func<T, bool>>? predicate = null, int page = 0, int count = 0,
         Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null, bool orderAsc = true,
         string orderBy = "Id", bool isTracking = false);
 
