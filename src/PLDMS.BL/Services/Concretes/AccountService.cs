@@ -9,19 +9,19 @@ namespace PLDMS.BL.Services.Concretes;
 public class AccountService : IAccountService
 {
     readonly UserManager<AppUser> _userManager;
-    readonly SignInManager<AppUser> _singInManager;
+    readonly SignInManager<AppUser> _signInManager;
 
     public AccountService(UserManager<AppUser> userManager, SignInManager<AppUser> singInManager)
     {
         _userManager = userManager;
-        _singInManager = singInManager;
+        _signInManager = singInManager;
     }
 
     public async Task<AppUser> LoginAsync(UserLoginDTO dto)
     {
         AppUser user = await _userManager.FindByEmailAsync(dto.Email) ?? throw new BaseException("Credentials are wrong");
 
-        SignInResult res = await _singInManager.PasswordSignInAsync(user, dto.Password, false, true);
+        SignInResult res = await _signInManager.PasswordSignInAsync(user, dto.Password, false, true);
 
         if (!res.Succeeded) throw new BaseException("Credentials are wrong");
 
@@ -30,6 +30,6 @@ public class AccountService : IAccountService
 
     public async Task LogoutAsync()
     {
-        await _singInManager.SignOutAsync();
+        await _signInManager.SignOutAsync();
     }
 }

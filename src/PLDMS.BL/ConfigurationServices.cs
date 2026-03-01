@@ -19,5 +19,6 @@ public static class ConfigurationServices
 
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IProgramService, ProgramService>();
+        services.AddScoped<ICohortService, CohortService>();
     }
 }

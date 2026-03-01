@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using PLDMS.BL.Common;
 using PLDMS.BL.DTOs.ProgramDTOs;
 using PLDMS.BL.Services.Abstractions;
@@ -20,9 +21,11 @@ public class ProgramService : IProgramService
     
     public async Task<ICollection<ProgramItemDTO>> ProgramsAsItemAsync(string q)
     {
-        return _mapper.Map<ICollection<ProgramItemDTO>>(
-            await _programRepository.GetAllAsync(p =>
-                string.IsNullOrEmpty(q) || p.Name.Contains(q)));
+        var (programs, totalCount) = await _programRepository.GetAllAsync(p =>
+            string.IsNullOrEmpty(q) ||
+            EF.Functions.ILike(p.Name, $"%{q}%"));
+        
+        return _mapper.Map<ICollection<ProgramItemDTO>>(programs);
     }
 
     public async Task CreateAsync(ProgramFormDTO dto)

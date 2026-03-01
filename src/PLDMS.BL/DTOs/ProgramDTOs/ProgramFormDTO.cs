@@ -16,7 +16,7 @@ public class ProgramValidator : AbstractValidator<ProgramFormDTO>
             .NotEmpty()
             .WithMessage("Program name is required")
             .MaximumLength(150)
-            .WithMessage("Session name cannot exceed 150 characters");
+            .WithMessage("Program name cannot exceed 150 characters");
         
         RuleFor(x => x.Duration)
             .NotEmpty()
