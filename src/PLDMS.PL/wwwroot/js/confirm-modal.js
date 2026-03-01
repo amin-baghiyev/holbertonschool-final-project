@@ -1,28 +1,24 @@
 const confirmModal = document.getElementById('confirmModal');
-const openConfirmModal = (id, type, itemName) => {
-
+const openConfirmModal = (url, type, itemName) => {
     const config = {
-        delete: {
-            url: `/Admin/Program/Delete/${id}`,
-            title: "Delete Program",
+        Delete: {
+            title: `Delete ${itemName}`,
             verb: "permanently delete",
             icon: "ph-trash text-red-600",
             bg: "bg-red-100",
             btn: "bg-red-600 hover:bg-red-700",
             btnText: "Yes, Delete"
         },
-        disable: {
-            url: `/Admin/Program/Deactivate/${id}`,
-            title: "Deactivate Program",
+        Deactivate: {
+            title: `Deactivate ${itemName}`,
             verb: "deactivate",
             icon: "ph-warning-circle text-orange-600",
             bg: "bg-orange-100",
             btn: "bg-orange-600 hover:bg-orange-700",
             btnText: "Yes, Deactivate"
         },
-        enable: {
-            url: `/Admin/Program/Activate/${id}`,
-            title: "Activate Program",
+        Activate: {
+            title: `Activate ${itemName}`,
             verb: "activate",
             icon: "ph-check-circle text-green-600",
             bg: "bg-green-100",
@@ -35,15 +31,13 @@ const openConfirmModal = (id, type, itemName) => {
     if (!action) return;
 
     confirmModal.dataset.actionType = type;
-    confirmModal.dataset.actionUrl = action.url;
+    confirmModal.dataset.actionUrl = url;
 
     document.getElementById('actionTitle').innerText = action.title;
     document.getElementById('actionVerb').innerText = action.verb;
     document.getElementById('actionProgramName').innerText = itemName;
 
-    document.getElementById('actionIcon').className =
-        `ph ${action.icon} text-3xl`;
-
+    document.getElementById('actionIcon').className = `ph ${action.icon} text-3xl`;
     document.getElementById('actionIconContainer').className =
         `mx-auto flex items-center justify-center h-16 w-16 rounded-full ${action.bg} mb-4`;
 
@@ -74,11 +68,11 @@ document.addEventListener('click', (e) => {
         e.target.closest(".power-btn");
 
     if (btn) {
-        const id = btn.dataset.id;
+        const url = btn.dataset.url;
         const type = btn.dataset.type;
         const name = btn.dataset.name;
 
-        openConfirmModal(id, type, name);
+        openConfirmModal(url, type, name);
         return;
     }
 
@@ -93,15 +87,13 @@ document.addEventListener('click', (e) => {
 document
     .getElementById('actionProgramForm')
     .addEventListener('submit', async function (e) {
-
         e.preventDefault();
 
         const formData = new FormData(this);
         const type = confirmModal.dataset.actionType;
-        const method =
-            type === 'delete' ? 'DELETE' : 'PATCH';
         const url = confirmModal.dataset.actionUrl;
-        
+        const method = type === 'Delete' ? 'DELETE' : 'PATCH';
+
         try {
             const response = await fetch(url, {
                 method: method,
@@ -114,8 +106,8 @@ document
             } else {
                 alert("Operation failed. Please try again.");
             }
-
         } catch (error) {
             console.error("Error:", error);
+            alert("Something went wrong!");
         }
     });

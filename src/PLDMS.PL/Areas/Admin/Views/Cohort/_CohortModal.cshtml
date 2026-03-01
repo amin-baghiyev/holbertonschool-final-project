@@ -1,0 +1,48 @@
+@using PLDMS.BL.DTOs.CohortDTOs
+@model CohortFormDTO
+
+<div id="addCohortModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="modal-overlay fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity"></div>
+
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div id="modalContent" class="relative bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <form id="createCohortForm">
+                @Html.AntiForgeryToken()
+                
+                <div class="p-6">
+                    <h3 id="modalTitle" class="text-xl font-bold mb-6">Create New Cohort</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Cohort Name</label>
+                            <input asp-for="Name" type="text" class="w-full mt-1 border rounded-lg p-2.5 focus:ring-brand-red outline-none">
+                            <span asp-validation-for="Name" class="text-red-500 text-xs mt-1"></span>
+                        </div>
+                        <div>
+                            <label>Program</label>
+                            <select id="ProgramId" name="ProgramId" class="w-full mt-1 border rounded-lg p-2.5 outline-none">
+                                <option value="">Select Program</option>
+                            </select>
+                            <span class="text-red-500 text-xs mt-1" data-valmsg-for="ProgramId"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Start Date</label>
+                            <input asp-for="StartDate" name="StartDate" type="date" class="w-full mt-1 border rounded-lg p-2.5 focus:ring-brand-red outline-none">
+                            <span asp-validation-for="StartDate" class="text-red-500 text-xs mt-1"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">End Date</label>
+                            <input asp-for="EndDate" type="date" name="EndDate" class="w-full mt-1 border rounded-lg p-2.5 outline-none">
+                            <span asp-validation-for="EndDate" class="text-red-500 text-xs mt-1"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3">
+                    <button type="button" class="cancel-btn px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">Cancel</button>
+                    <button type="submit" class="save-cohort bg-brand-red text-white px-6 py-2 rounded-lg font-medium">Save Cohort</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

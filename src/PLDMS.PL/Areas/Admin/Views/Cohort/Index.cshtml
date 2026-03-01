@@ -1,79 +1,250 @@
-﻿<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
+﻿@using PLDMS.BL.DTOs.CohortDTOs
+@using PLDMS.PL.Areas.Admin.ViewModels
+@model CohortVM
+
+@{
+    var hasSearch = !string.IsNullOrWhiteSpace(Context.Request.Query["q"]);
+    var startItem = Model.TotalCount == 0
+        ? 0
+        : Model.CurrentPage * Model.PageSize + 1;
+
+    var endItem = Math.Min(
+        (Model.CurrentPage + 1) * Model.PageSize,
+        Model.TotalCount
+    );
+
+    var totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+}
+
+<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0">
     <h1 class="text-xl font-bold text-gray-800">Cohorts Management</h1>
+    <button
+        class="add-cohort flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm">
+        <i class="ph ph-plus-circle text-lg"></i>
+        <span class="hidden sm:inline">Add Cohort</span>
+    </button>
+    <partial name="_CohortModal" model="new CohortFormDTO()"/>
 </header>
-<div class="flex-1 overflow-y-auto p-8">
-    <div class="flex justify-between items-center mb-6">
-        <div class="relative w-96">
-            <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-            <input type="text" placeholder="Search cohorts..."
-                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red">
+
+<div class="flex-1 flex flex-col overflow-hidden p-8">
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 shrink-0">
+        <div>
+            <h2 class="text-lg font-semibold text-gray-900">Cohorts</h2>
+            <p class="text-sm text-gray-500">Manage your cohorts.</p>
         </div>
-        <button
-            class="flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors">
-            <i class="ph ph-plus-circle text-lg"></i> Add New Cohort
-        </button>
+
+        <div class="flex gap-3">
+            <form asp-action="Index" method="get" class="flex gap-3">
+                <div
+                    class="flex items-center bg-white border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-brand-red/20 transition-all">
+                    <i class="ph ph-magnifying-glass text-gray-400 mr-2"></i>
+                    <input type="text" name="q" value="@Context.Request.Query["q"]"
+                           placeholder="Search by cohort and program name..."
+                           class="outline-none text-sm w-40 md:w-64 bg-transparent">
+                    @if (!string.IsNullOrEmpty(Context.Request.Query["q"]))
+                    {
+                        <a asp-action="Index" class="ml-2 text-gray-400 hover:text-brand-red">
+                            <i class="ph ph-x-circle"></i>
+                        </a>
+                    }
+                </div>
+                <button type="submit"
+                        class="bg-brand-red hover:bg-red-700 py-2.5 px-5 rounded-lg transition-all shadow-sm">
+                    <i class="ph ph-magnifying-glass text-white font-large"></i>
+                </button>
+            </form>
+        </div>
     </div>
 
-    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <table class="w-full text-left border-collapse">
-            <thead>
-            <tr class="bg-gray-50 border-b border-gray-200 text-sm font-semibold text-gray-600">
-                <th class="px-6 py-4">Cohort Name</th>
-                <th class="px-6 py-4">Program</th>
-                <th class="px-6 py-4">Duration (Start - End)</th>
-                <th class="px-6 py-4">Students</th>
-                <th class="px-6 py-4">Status</th>
-                <th class="px-6 py-4 text-right">Actions</th>
-            </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200 text-sm">
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 font-medium text-gray-900">C20 - Web Dev</td>
-                <td class="px-6 py-4 text-gray-600">Full-Stack Development</td>
-                <td class="px-6 py-4 text-gray-600">01 Oct 2023 - 01 Apr 2024</td>
-                <td class="px-6 py-4"><span
-                        class="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg font-medium">45</span></td>
-                <td class="px-6 py-4"><span
-                        class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Active</span>
-                </td>
-                <td class="px-6 py-4 text-right">
-                    <button class="p-1.5 text-gray-500 hover:text-blue-600"><i class="ph ph-pencil-simple text-lg"></i>
-                    </button>
-                    <button class="p-1.5 text-gray-500 hover:text-brand-red"><i class="ph ph-trash text-lg"></i>
-                    </button>
-                </td>
-            </tr>
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 font-medium text-gray-900">C21 - Data Sci</td>
-                <td class="px-6 py-4 text-gray-600">Data Science & ML</td>
-                <td class="px-6 py-4 text-gray-600">15 Nov 2023 - 15 May 2024</td>
-                <td class="px-6 py-4"><span
-                        class="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg font-medium">32</span></td>
-                <td class="px-6 py-4"><span
-                        class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Active</span>
-                </td>
-                <td class="px-6 py-4 text-right">
-                    <button class="p-1.5 text-gray-500 hover:text-blue-600"><i class="ph ph-pencil-simple text-lg"></i>
-                    </button>
-                    <button class="p-1.5 text-gray-500 hover:text-brand-red"><i class="ph ph-trash text-lg"></i>
-                    </button>
-                </td>
-            </tr>
-            <tr class="hover:bg-gray-50 bg-gray-50/50">
-                <td class="px-6 py-4 font-medium text-gray-600">C19 - UI/UX</td>
-                <td class="px-6 py-4 text-gray-500">Product Design</td>
-                <td class="px-6 py-4 text-gray-500">01 Mar 2023 - 01 Sep 2023</td>
-                <td class="px-6 py-4"><span
-                        class="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg font-medium">28</span></td>
-                <td class="px-6 py-4"><span
-                        class="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-600">Finished</span>
-                </td>
-                <td class="px-6 py-4 text-right">
-                    <button class="p-1.5 text-gray-500 hover:text-blue-600"><i class="ph ph-eye text-lg"></i></button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+    @if (!string.IsNullOrEmpty(Context.Request.Query["q"]))
+    {
+        <div class="mb-4 text-sm text-gray-600">
+            Showing results for: <span class="font-bold text-brand-red">"@Context.Request.Query["q"]"</span>
+        </div>
+    }
+
+    <div class="flex-1 flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+
+        <div class="flex-1 overflow-y-auto">
+            @if (Model.Cohorts != null && Model.Cohorts.Count != 0)
+            {
+                <table class="min-w-full">
+                    <thead class="sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_0_#e5e7eb]">
+                    <tr class="text-sm font-semibold text-gray-600">
+                        <th class="px-6 py-4 text-left">Cohort Name</th>
+                        <th class="px-6 py-4">Program</th>
+                        <th class="px-6 py-4">Duration (Start - End)</th>
+                        <th class="px-6 py-4">Students</th>
+                        <th class="px-6 py-4">Active</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-gray-200 text-sm">
+                    @foreach (var item in Model.Cohorts)
+                    {
+                        var isDeleted = item.IsDeleted;
+                        var actionType = isDeleted ? "Activate" : "Deactivate";
+                        var hoverColor = isDeleted ? "hover:text-green-600" : "hover:text-brand-red";
+
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 font-medium text-gray-900">@item.Name</td>
+                            <td class="px-6 py-4 text-center text-gray-600">@item.Program.Name</td>
+                            <td class="px-6 py-4 text-center text-gray-600">
+                                @item.StartDate.ToString("dd.MM.yyyy") -
+                                @item.EndDate.ToString("dd.MM.yyyy")
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg font-medium">
+                                    @item.StudentCount
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span
+                                    class="px-2.5 py-1 @(isDeleted ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700") rounded-lg font-medium">
+                                    @(isDeleted ? "No" : "Yes")
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button class="edit-btn text-gray-500 hover:text-blue-600"
+                                        data-id="@item.Id"
+                                        data-name="@item.Name"
+                                        data-program-id="@item.Program.Id"
+                                        data-start-date="@item.StartDate.ToString("yyyy-MM-dd")"
+                                        data-end-date="@item.EndDate.ToString("yyyy-MM-dd")">
+                                    <i class="ph ph-pencil-simple text-lg"></i>
+                                </button>
+
+                                <button data-url="@Url.Action("Delete", "Cohort", new { id = item.Id })"
+                                        data-type="Delete"
+                                        data-name="@item.Name"
+                                        class="trash-btn text-gray-500 hover:text-brand-red">
+                                    <i class="ph ph-trash text-lg"></i>
+                                </button>
+
+                                <button data-url="@Url.Action(actionType, "Cohort", new { id = item.Id })"
+                                        data-type="@actionType"
+                                        data-name="@item.Name"
+                                        class="power-btn text-gray-500 @hoverColor">
+                                    <i class="ph ph-power text-lg"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="py-12 text-center bg-gray-50 border border-dashed rounded-xl">
+                    @if (hasSearch)
+                    {
+                        <i class="ph ph-magnifying-glass text-4xl text-gray-300 mb-2"></i>
+                        <p class="text-gray-500">
+                            No cohorts found matching your search.
+                        </p>
+                    }
+                    else
+                    {
+                        <i class="ph ph-folder-open text-4xl text-gray-300 mb-2"></i>
+                        <p class="text-gray-500">
+                            There are no cohorts yet.
+                        </p>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-white shrink-0">
+
+            <!-- Left Side -->
+            <div class="flex items-center gap-6">
+
+                <div class="hidden sm:block text-sm text-gray-500">
+                    Showing
+                    <span class="font-medium text-gray-900">@startItem</span>
+                    -
+                    <span class="font-medium text-gray-900">@endItem</span>
+                    of
+                    <span class="font-medium text-gray-900">@Model.TotalCount</span>
+                    results
+                </div>
+
+                <!-- Page Size Selector -->
+                <form method="get" asp-action="Index" class="flex items-center gap-2 text-sm">
+                    <input type="hidden" name="q" value="@Model.Search"/>
+                    <input type="hidden" name="page" value="0"/>
+
+                    <span class="text-gray-500">Show</span>
+
+                    <select name="pageSize"
+                            onchange="this.form.submit()"
+                            class="border border-gray-200 rounded-lg px-2 py-1 text-gray-700 focus:outline-none focus:ring-1 focus:ring-red-400">
+
+                        <option value="5" selected="@(Model.PageSize == 5)">5</option>
+                        <option value="10" selected="@(Model.PageSize == 10)">10</option>
+                        <option value="15" selected="@(Model.PageSize == 15)">15</option>
+                        <option value="20" selected="@(Model.PageSize == 20)">20</option>
+                    </select>
+
+                    <span class="text-gray-500">per page</span>
+                </form>
+
+            </div>
+
+            <!-- Right Side Pagination -->
+            <div class="flex gap-2">
+
+                <!-- Previous -->
+                <a asp-action="Index"
+                   asp-route-q="@Model.Search"
+                   asp-route-page="@(Model.CurrentPage - 1)"
+                   asp-route-pageSize="@Model.PageSize"
+                   class="px-3 py-1.5 border rounded-lg text-sm font-medium
+           @(Model.CurrentPage == 0
+                                         ? "border-gray-200 text-gray-400 bg-gray-50 pointer-events-none"
+                                         : "border-gray-200 text-gray-600 hover:bg-gray-50")">
+
+                    Previous
+                </a>
+
+                <!-- Page Numbers -->
+                <div class="hidden sm:flex gap-1">
+                    @for (var i = 0; i < totalPages; i++)
+                    {
+                        <a asp-action="Index"
+                           asp-route-q="@Model.Search"
+                           asp-route-page="@i"
+                           asp-route-pageSize="@Model.PageSize"
+                           class="px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors
+                   @(i == Model.CurrentPage
+                                                         ? "border-red-200 bg-red-50 text-red-600"
+                                                         : "border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900")">
+
+                            @(i + 1)
+                        </a>
+                    }
+                </div>
+
+                <!-- Next -->
+                <a asp-action="Index"
+                   asp-route-q="@Model.Search"
+                   asp-route-page="@(Model.CurrentPage + 1)"
+                   asp-route-pageSize="@Model.PageSize"
+                   class="px-3 py-1.5 border rounded-lg text-sm font-medium
+           @(Model.CurrentPage >= totalPages - 1
+                                         ? "border-gray-200 text-gray-400 bg-gray-50 pointer-events-none"
+                                         : "border-gray-200 text-gray-600 hover:bg-gray-50")">
+
+                    Next
+                </a>
+
+            </div>
+        </div>
     </div>
 </div>
-       
+
+@section Scripts {
+    <script type="module" src="~/js/admin/cohort.js"></script>
+}

@@ -6,6 +6,12 @@
 }
 <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
     <h1 class="text-xl font-bold text-gray-800">Programs</h1>
+    <button
+        class="add-program flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm">
+        <i class="ph ph-plus-circle text-lg"></i> 
+        <span class="hidden sm:inline">Add Program</span>
+    </button>
+    <partial name="_ProgramModal" model="new ProgramFormDTO()" />
 </header>
 
 <div class="flex-1 overflow-y-auto p-8">
@@ -16,27 +22,24 @@
         </div>
 
         <div class="flex gap-3">
-            <form asp-action="Index" method="get" class="flex items-center bg-white border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-brand-red/20 transition-all">
-                <i class="ph ph-magnifying-glass text-gray-400 mr-2"></i>
-                <input type="text" name="q" value="@Context.Request.Query["q"]" 
-                       placeholder="Filter by name..." 
-                       class="outline-none text-sm w-40 md:w-64 bg-transparent">
-                @if (!string.IsNullOrEmpty(Context.Request.Query["q"]))
-                {
-                    <a asp-action="Index" class="ml-2 text-gray-400 hover:text-brand-red">
-                        <i class="ph ph-x-circle"></i>
-                    </a>
-                }
+            <form asp-action="Index" method="get" class="flex gap-3">
+                <div class="flex items-center bg-white border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-brand-red/20 transition-all">
+                    <i class="ph ph-magnifying-glass text-gray-400 mr-2"></i>
+                    <input type="text" name="q" value="@Context.Request.Query["q"]"
+                           placeholder="Search by name..."
+                           class="outline-none text-sm w-40 md:w-64 bg-transparent">
+                    @if (!string.IsNullOrEmpty(Context.Request.Query["q"]))
+                    {
+                        <a asp-action="Index" class="ml-2 text-gray-400 hover:text-brand-red">
+                            <i class="ph ph-x-circle"></i>
+                        </a>
+                    }
+                </div>
+                    <button type="submit" class="bg-brand-red hover:bg-red-700 py-2.5 px-5 rounded-lg transition-all shadow-sm">
+                        <i class="ph ph-magnifying-glass text-white font-large"></i>
+                </button>
             </form>
-
-            <button
-                    class="add-program flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm">
-                <i class="ph ph-plus-circle text-lg"></i> 
-                <span class="hidden sm:inline">Add Program</span>
-            </button>
         </div>
-        <partial name="_ProgramModal" model="new ProgramFormDTO()" />
-        
     </div>
 
     @if (!string.IsNullOrEmpty(Context.Request.Query["q"]))
@@ -52,7 +55,7 @@
             foreach (var item in Model)
             {
                 var isDeleted = item.IsDeleted;
-                var actionType = isDeleted ? "enable" : "disable";
+                var actionType = isDeleted ? "Activate" : "Deactivate";
                 var hoverColor = isDeleted ? "hover:text-green-600" : "hover:text-brand-red";
             
                 <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -67,9 +70,16 @@
                                 <i class="ph ph-pencil-simple text-lg"></i>
                             </button>
                             
-                            <button data-id="@item.Id" data-type="delete" data-name="@item.Name" class="trash-btn text-gray-400 hover:text-brand-red"><i class="ph ph-trash text-lg"></i></button>
+                            <button
+                                data-url="@Url.Action("Delete", "Program", new { id = item.Id })"
+                                data-type="Delete"
+                                data-name="@item.Name"
+                                class="trash-btn text-gray-400 hover:text-brand-red">
+                                <i class="ph ph-trash text-lg"></i>
+                            </button>
                             
-                            <button data-id="@item.Id"
+                            <button 
+                                    data-url="@Url.Action(actionType, "Program", new { id = item.Id })"
                                     data-type="@actionType"
                                     data-name="@item.Name"
                                     class="power-btn text-gray-400 @hoverColor">
