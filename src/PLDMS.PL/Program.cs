@@ -38,7 +38,7 @@ builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, AppUserClaimsPrincipalFactory>();
 
 builder.Services.AddDLServices();
-builder.Services.AddBLServices();
+builder.Services.AddBLServices(builder.Configuration);
 
 builder.Services.ConfigureApplicationCookie(opt =>
 {

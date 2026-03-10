@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PLDMS.BL.Common;
 using PLDMS.BL.DTOs;
 using PLDMS.BL.Services.Abstractions;
+using PLDMS.BL.Utilities;
 using PLDMS.Core.Entities;
 using PLDMS.Core.Enums;
 using PLDMS.DL.Repositories.Abstractions;
@@ -15,13 +16,15 @@ public class SessionService : ISessionService
     private readonly IRepository<Session> _sessionRepository;
     private readonly IRepository<Exercise> _exerciseRepository;
     private readonly IRepository<StudentCohort> _studentCohortRepository;
+    private readonly GitHubService _gitHubService;
     private readonly IMapper _mapper;
 
-    public SessionService(IRepository<Session> sessionRepository, IRepository<Exercise> exerciseRepository, IRepository<StudentCohort> studentCohortRepository, IMapper mapper)
+    public SessionService(IRepository<Session> sessionRepository, IRepository<Exercise> exerciseRepository, IRepository<StudentCohort> studentCohortRepository, GitHubService gitHubService, IMapper mapper)
     {
         _sessionRepository = sessionRepository;
         _exerciseRepository = exerciseRepository;
         _studentCohortRepository = studentCohortRepository;
+        _gitHubService = gitHubService;
         _mapper = mapper;
     }
 
@@ -126,11 +129,12 @@ public class SessionService : ISessionService
         var session = _mapper.Map<Session>(dto);
         session.Id = Guid.CreateVersion7();
         session.CreatedAt = DateTime.UtcNow;
-        session.RepositoryUrl = string.Empty;
 
         session.Name = string.IsNullOrWhiteSpace(dto.Name)
             ? $"Session-{Guid.NewGuid().ToString()[..8]}"
             : dto.Name;
+
+        session.RepositoryUrl = await _gitHubService.CreateRepoAsync(session.Name);
 
         session.Exercises = [.. dto.ExercisesIds.Select(id => new SessionExercise
         {
@@ -287,6 +291,9 @@ public class SessionService : ISessionService
 
         if (session.StartDate <= DateTime.UtcNow)
             throw new BaseException("Cannot delete the session because it has already started");
+
+        var repoName = new Uri(session.RepositoryUrl).Segments.Last();
+        await _gitHubService.DeleteRepoAsync(repoName);
 
         _sessionRepository.Delete(session);
         await _sessionRepository.SaveChangesAsync();
