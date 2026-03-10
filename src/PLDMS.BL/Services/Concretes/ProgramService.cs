@@ -1,10 +1,11 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PLDMS.BL.Common;
-using PLDMS.BL.DTOs.ProgramDTOs;
+using PLDMS.BL.DTOs;
 using PLDMS.BL.Services.Abstractions;
 using PLDMS.Core.Entities;
 using PLDMS.DL.Repositories.Abstractions;
+using System.Linq.Expressions;
 
 namespace PLDMS.BL.Services.Concretes;
 
@@ -22,10 +23,24 @@ public class ProgramService : IProgramService
     public async Task<ICollection<ProgramItemDTO>> ProgramsAsItemAsync(string q)
     {
         var (programs, totalCount) = await _programRepository.GetAllAsync(p =>
-            string.IsNullOrEmpty(q) ||
+            string.IsNullOrWhiteSpace(q) ||
             EF.Functions.ILike(p.Name, $"%{q}%"));
         
         return _mapper.Map<ICollection<ProgramItemDTO>>(programs);
+    }
+
+    public async Task<ICollection<ProgramOptionItemDTO>> ProgramsAsOptionItemAsync(string? q = null, int count = 25)
+    {
+        Expression<Func<Program, bool>> predicate = e =>
+            !e.IsDeleted &&
+            (string.IsNullOrWhiteSpace(q) || EF.Functions.ILike(e.Name, $"%{q}%"));
+
+        var (items, _) = await _programRepository.GetAllAsync(
+            predicate: predicate,
+            count: count
+        );
+
+        return _mapper.Map<ICollection<ProgramOptionItemDTO>>(items);
     }
 
     public async Task CreateAsync(ProgramFormDTO dto)

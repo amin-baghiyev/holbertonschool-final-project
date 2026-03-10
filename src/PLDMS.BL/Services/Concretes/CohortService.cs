@@ -1,8 +1,7 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PLDMS.BL.Common;
-using PLDMS.BL.DTOs.CohortDTOs;
-using PLDMS.BL.DTOs.ProgramDTOs;
+using PLDMS.BL.DTOs;
 using PLDMS.BL.Services.Abstractions;
 using PLDMS.Core.Entities;
 using PLDMS.DL.Repositories.Abstractions;
@@ -15,8 +14,7 @@ public class CohortService : ICohortService
     private readonly IRepository<Program> _programRepository;
     private readonly IMapper _mapper;
     
-    public CohortService(IRepository<Cohort> cohortRepository,
-        IRepository<Program> programRepository, IMapper mapper)
+    public CohortService(IRepository<Cohort> cohortRepository, IRepository<Program> programRepository, IMapper mapper)
     {
         _cohortRepository = cohortRepository;
         _programRepository = programRepository;
@@ -26,19 +24,19 @@ public class CohortService : ICohortService
     public async Task<(ICollection<CohortTableItemDTO> Items, int TotalCount)> CohortsAsTableItemAsync(string q, int page = 0, int count = 10)
     {
         var (cohorts, totalCount) = await _cohortRepository.GetAllAsync(c=> 
-            string.IsNullOrEmpty(q) ||
+            string.IsNullOrWhiteSpace(q) ||
             EF.Functions.ILike(c.Name, $"%{q}%") ||
             EF.Functions.ILike(c.Program.Name, $"%{q}%"),
             page,
             count,
             includes: cohort => cohort.Include(c => c.Program)
-            );
+        );
 
         ICollection<CohortTableItemDTO> dto = cohorts.Select(c => new CohortTableItemDTO
         {
             Id = c.Id,
             Name = c.Name,
-            Program = new ProgramSelectItemDTO
+            Program = new ProgramOptionItemDTO
             {
                 Id = c.Program.Id,
                 Name = c.Program.Name
@@ -52,27 +50,31 @@ public class CohortService : ICohortService
         return (dto, totalCount);
     }
 
-    public async Task<ICollection<ProgramSelectItemDTO>> GetProgramSelectItemsAsync()
+    public async Task<ICollection<CohortOptionItemDTO>> CohortsAsOptionItemAsync(string? q = null, int count = 25)
     {
-        var (programs, totalCount) = await _programRepository.GetAllAsync();
+        var (cohorts, _) = await _cohortRepository.GetAllAsync(c =>
+            !c.IsDeleted &&
+            (string.IsNullOrWhiteSpace(q) || EF.Functions.ILike(c.Name, $"%{q}%")),
+            count
+        );
 
-        ICollection<ProgramSelectItemDTO> selectItemDtos = programs.Select(p => new ProgramSelectItemDTO
-        {
-            Id = p.Id,
-            Name = p.Name,
-        }).ToList();
-        
-        return selectItemDtos;
+        return _mapper.Map<ICollection<CohortOptionItemDTO>>(cohorts);
     }
 
     public async Task CreateAsync(CohortFormDTO dto)
     {
+        if (await _programRepository.GetOneAsync(p => p.Id == dto.ProgramId) is null)
+            throw new BaseException($"Program with ID {dto.ProgramId} was not found");
+
         var cohort = _mapper.Map<Cohort>(dto);
         await _cohortRepository.CreateAsync(cohort);
     }
 
     public async Task UpdateAsync(int id, CohortFormDTO dto)
     {
+        if (await _programRepository.GetOneAsync(p => p.Id == dto.ProgramId) is null)
+            throw new BaseException($"Program with ID {dto.ProgramId} was not found");
+
         var cohort = await _cohortRepository.GetOneAsync(c => c.Id == id);
 
         if (cohort == null)

@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace PLDMS.BL.DTOs.ProgramDTOs;
+namespace PLDMS.BL.DTOs;
 
 public record ProgramFormDTO
 {

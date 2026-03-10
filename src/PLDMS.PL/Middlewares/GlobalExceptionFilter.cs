@@ -21,18 +21,21 @@ public class GlobalExceptionFilter : IExceptionFilter
             ? ex.Message
             : "Something went wrong";
 
-        var result = new ViewResult
+        context.Result = new JsonResult(new
         {
-            ViewName = context.RouteData.Values["action"]?.ToString(),
-            ViewData = new ViewDataDictionary(_modelMetadataProvider, context.ModelState)
+            errors = new
             {
-                Model = context.RouteData.Values["dto"]
+                Error = new[] { errorMessage }
             }
+        },
+        new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNamingPolicy = null
+        })
+        {
+            StatusCode = 400
         };
 
-        result.ViewData.ModelState.AddModelError("Error", errorMessage);
-
-        context.Result = result;
         context.ExceptionHandled = true;
     }
 }

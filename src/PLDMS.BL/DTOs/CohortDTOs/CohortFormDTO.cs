@@ -1,7 +1,6 @@
 using FluentValidation;
-using PLDMS.BL.DTOs.ProgramDTOs;
 
-namespace PLDMS.BL.DTOs.CohortDTOs;
+namespace PLDMS.BL.DTOs;
 
 public record CohortFormDTO
 {

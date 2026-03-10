@@ -1,5 +1,5 @@
 using AutoMapper;
-using PLDMS.BL.DTOs.ProgramDTOs;
+using PLDMS.BL.DTOs;
 using PLDMS.Core.Entities;
 
 namespace PLDMS.BL.Profiles;
@@ -10,5 +10,6 @@ public class ProgramProfile : Profile
     {
         CreateMap<Program, ProgramItemDTO>().ReverseMap();
         CreateMap<Program, ProgramFormDTO>().ReverseMap();
+        CreateMap<Program, ProgramOptionItemDTO>();
     }
 }
