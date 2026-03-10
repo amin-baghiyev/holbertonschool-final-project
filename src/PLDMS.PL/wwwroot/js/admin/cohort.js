@@ -2,19 +2,17 @@ const modal = document.getElementById('addCohortModal');
 let isEdit = false;
 let cohortId;
 
-const fetchPrograms = () => {
-    return fetch('/Admin/Cohort/GetPrograms')
-        .then(res => res.json())
-        .then(data => {
-            const select = document.getElementById("ProgramId");
-            select.innerHTML = "<option value=''>Select Program</option>";
-            data.forEach(p => {
-                const option = document.createElement("option");
-                option.value = p.id;
-                option.textContent = p.name;
-                select.appendChild(option);
-            });
-        });
+const fetchPrograms = async () => {
+    const res = await fetch('/Admin/Cohort/GetPrograms');
+    const data = await res.json();
+    const select = document.getElementById("ProgramId");
+    select.innerHTML = "<option value=''>Select Program</option>";
+    data.forEach(p => {
+        const option = document.createElement("option");
+        option.value = p.id;
+        option.textContent = p.name;
+        select.appendChild(option);
+    });
 }
 const openModal = () => {
     modal.classList.remove('hidden');

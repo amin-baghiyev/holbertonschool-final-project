@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PLDMS.BL.DTOs.CohortDTOs;
+using PLDMS.BL.DTOs;
 using PLDMS.BL.Services.Abstractions;
 using PLDMS.PL.Areas.Admin.ViewModels;
 
@@ -11,56 +11,45 @@ namespace PLDMS.PL.Areas.Admin.Controllers;
 public class CohortController : Controller
 {
     private readonly ICohortService _cohortService;
-    public CohortController(ICohortService cohortService)
+    private readonly IProgramService _programService;
+
+    public CohortController(ICohortService cohortService, IProgramService programService)
     {
         _cohortService = cohortService;
+        _programService = programService;
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> GetPrograms()
     {
-        try
-        {
-            var programs = await _cohortService.GetProgramSelectItemsAsync();
-            return Json(programs);
-        }
-        catch (Exception e)
-        {
-            return BadRequest("Something went wrong!");
-        }
+        var programs = await _programService.ProgramsAsOptionItemAsync();
+        return Json(programs);
     }
     
     [HttpGet]
     public async Task<IActionResult> Index(string? q, int page, int pageSize = 10)
     {
-        try
+        pageSize = pageSize switch
         {
-            pageSize = pageSize switch
-            {
-                5 => 5,
-                10 => 10,
-                15 => 15,
-                20 => 20,
-                _ => 10
-            };
-            
-            var (cohorts, totalCount) = await _cohortService.CohortsAsTableItemAsync(q ?? "", page, pageSize);
+            5 => 5,
+            10 => 10,
+            15 => 15,
+            20 => 20,
+            _ => 10
+        };
         
-            var vm = new CohortVM
-            {
-                Cohorts = cohorts,
-                TotalCount = totalCount,
-                CurrentPage = page,
-                PageSize = pageSize,
-                Search = q ?? ""
-            };
+        var (cohorts, totalCount) = await _cohortService.CohortsAsTableItemAsync(q ?? "", page, pageSize);
         
-            return View(vm);
-        }
-        catch (Exception)
+        var vm = new CohortVM
         {
-            return BadRequest("Something went wrong!");
-        }
+            Cohorts = cohorts,
+            TotalCount = totalCount,
+            CurrentPage = page,
+            PageSize = pageSize,
+            Search = q ?? ""
+        };
+        
+        return View(vm);
     }
     
     [HttpPost]
@@ -69,27 +58,13 @@ public class CohortController : Controller
     {
         if (!ModelState.IsValid)
         {
-            var errors = ModelState
-                .Where(x => x.Value.Errors.Count > 0)
-                .ToDictionary(
-                    kvp => kvp.Key, 
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-                );
-
-            return BadRequest(new { success = false, errors });
+            return ValidationProblem(ModelState);
         }
 
-        try
-        {
-            await _cohortService.CreateAsync(dto);
-            await _cohortService.SaveChangesAsync();
+        await _cohortService.CreateAsync(dto);
+        await _cohortService.SaveChangesAsync();
         
-            return Json(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, "Internal server error");
-        }
+        return Created();
     }
     
     
@@ -99,77 +74,42 @@ public class CohortController : Controller
     {
         if (!ModelState.IsValid)
         {
-            var errors = ModelState
-                .Where(x => x.Value.Errors.Count > 0)
-                .ToDictionary(
-                    kvp => kvp.Key, 
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-                );
-
-            return BadRequest(new { success = false, errors });
+            return ValidationProblem(ModelState);
         }
 
-        try
-        {
-            await _cohortService.UpdateAsync(id, dto);
-            await _cohortService.SaveChangesAsync();
+        await _cohortService.UpdateAsync(id, dto);
+        await _cohortService.SaveChangesAsync();
         
-            return Json(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, "Internal server error");
-        }
+        return Ok();
     }
 
     [HttpDelete]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            await _cohortService.DeleteAsync(id);
-            await _cohortService.SaveChangesAsync();
-        
-            return Json(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, "Internal server error");
-        }
+        await _cohortService.DeleteAsync(id);
+        await _cohortService.SaveChangesAsync();
+
+        return Ok();
     }
     
     [HttpPatch]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Deactivate(int id)
     {
-        try
-        {
-            await _cohortService.SoftDeleteAsync(id);
-            await _cohortService.SaveChangesAsync();
+        await _cohortService.SoftDeleteAsync(id);
+        await _cohortService.SaveChangesAsync();
         
-            return Json(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, "Internal server error");
-        }
+        return Ok();
     }
     
     [HttpPatch]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Activate(int id)
     {
-        try
-        {
-            await _cohortService.RevertSoftDeleteAsync(id);
-            await _cohortService.SaveChangesAsync();
+        await _cohortService.RevertSoftDeleteAsync(id);
+        await _cohortService.SaveChangesAsync();
         
-            return Json(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, "Internal server error");
-        }
+        return Ok();
     }
 }

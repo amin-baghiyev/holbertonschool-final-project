@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PLDMS.BL.DTOs.ProgramDTOs;
+using PLDMS.BL.DTOs;
 using PLDMS.BL.Services.Abstractions;
 
 namespace PLDMS.PL.Areas.Admin.Controllers;
@@ -10,6 +10,7 @@ namespace PLDMS.PL.Areas.Admin.Controllers;
 public class ProgramController : Controller
 {
     private readonly IProgramService _programService;
+
     public ProgramController(IProgramService programService)
     {
         _programService = programService;
@@ -18,18 +19,11 @@ public class ProgramController : Controller
     [HttpGet]
     public async Task<IActionResult> Index(string? q)
     {
-        try
-        {  
-            var programs = await _programService.ProgramsAsItemAsync(q ?? "");
+        var programs = await _programService.ProgramsAsItemAsync(q ?? "");
         
-            ViewBag.CurrentSearch = q ?? "";
+        ViewBag.CurrentSearch = q ?? "";
         
-            return View(programs);
-        }
-        catch (Exception)
-        {
-            return BadRequest("Something went wrong!");
-        }
+        return View(programs);
     }
     
     [HttpPost]
@@ -38,27 +32,13 @@ public class ProgramController : Controller
     {
         if (!ModelState.IsValid)
         {
-            var errors = ModelState
-                .Where(x => x.Value.Errors.Count > 0)
-                .ToDictionary(
-                    kvp => kvp.Key, 
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-                );
-
-            return BadRequest(new { success = false, errors });
+            return ValidationProblem(ModelState);
         }
 
-        try
-        {
-            await _programService.CreateAsync(dto);
-            await _programService.SaveChangesAsync();
+        await _programService.CreateAsync(dto);
+        await _programService.SaveChangesAsync();
         
-            return Json(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, "Internal server error");
-        }
+        return Created();
     }
     
     
@@ -68,77 +48,42 @@ public class ProgramController : Controller
     {
         if (!ModelState.IsValid)
         {
-            var errors = ModelState
-                .Where(x => x.Value.Errors.Count > 0)
-                .ToDictionary(
-                    kvp => kvp.Key, 
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-                );
-
-            return BadRequest(new { success = false, errors });
+            return ValidationProblem(ModelState);
         }
 
-        try
-        {
-            await _programService.UpdateAsync(id, dto);
-            await _programService.SaveChangesAsync();
+        await _programService.UpdateAsync(id, dto);
+        await _programService.SaveChangesAsync();
         
-            return Json(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, "Internal server error");
-        }
+        return Ok();
     }
 
     [HttpDelete]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            await _programService.DeleteAsync(id);
-            await _programService.SaveChangesAsync();
+        await _programService.DeleteAsync(id);
+        await _programService.SaveChangesAsync();
         
-            return Json(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, "Internal server error");
-        }
+        return Ok();
     }
     
     [HttpPatch]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Deactivate(int id)
     {
-        try
-        {
-            await _programService.SoftDeleteAsync(id);
-            await _programService.SaveChangesAsync();
+        await _programService.SoftDeleteAsync(id);
+        await _programService.SaveChangesAsync();
         
-            return Json(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, "Internal server error");
-        }
+        return Ok();
     }
     
     [HttpPatch]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Activate(int id)
     {
-        try
-        {
-            await _programService.RevertSoftDeleteAsync(id);
-            await _programService.SaveChangesAsync();
+        await _programService.RevertSoftDeleteAsync(id);
+        await _programService.SaveChangesAsync();
         
-            return Json(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, "Internal server error");
-        }
+        return Ok();
     }
 }
