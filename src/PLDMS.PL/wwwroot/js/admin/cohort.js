@@ -1,7 +1,6 @@
 const modal = document.getElementById('addCohortModal');
 const studentModal = document.getElementById('addStudentModal');
 const form = document.getElementById("createCohortForm");
-const globalErrorContainer = document.getElementById('globalErrorContainer');
 let cohortId = null;
 let allStudents = [];
 let selectedStudentIds = new Set();
@@ -134,7 +133,6 @@ const closeModal = () => {
     form.reset();
 
     document.querySelectorAll('[data-valmsg-for]').forEach(span => span.textContent = '');
-    globalErrorContainer.classList.add('hidden');
     document.getElementById("modalTitle").innerText = "Create New Cohort";
 }
 

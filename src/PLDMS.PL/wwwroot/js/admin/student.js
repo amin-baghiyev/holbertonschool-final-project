@@ -1,6 +1,5 @@
 const modal = document.getElementById('studentModal');
 const form = document.getElementById('studentForm');
-const globalError = document.getElementById('globalErrorContainer');
 let studentId = null;
 
 const toggleModal = (show) => {
@@ -11,7 +10,6 @@ const toggleModal = (show) => {
         mentorId = null;
         form.reset();
         document.querySelectorAll('[data-valmsg-for]').forEach(x => x.textContent = '');
-        globalError.classList.add('hidden');
         document.getElementById("modalTitle").innerText = "Create New Program";
     }
 };
