@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using PLDMS.BL.Common;
 using PLDMS.BL.DTOs.MentorDTOs;
 using PLDMS.BL.Extension;
 using PLDMS.BL.Services.Abstractions;
 using PLDMS.BL.Utilities;
 using PLDMS.Core.Entities;
+using PLDMS.Core.Enums;
 using PLDMS.DL.Repositories.Abstractions;
 
 namespace PLDMS.BL.Services.Concretes;
@@ -14,7 +16,6 @@ public class MentorService : IMentorService
     private readonly UserManager<AppUser> _userManager;
     private readonly IEmailService _emailService;
     private readonly IRepository<AppUser> _mentorRepository;
-    private const string MentorRole = "Mentor";
 
     public MentorService(UserManager<AppUser> userManager, IRepository<AppUser> mentorRepository, IEmailService emailService)
     {
@@ -25,19 +26,18 @@ public class MentorService : IMentorService
 
     public async Task<(ICollection<MentorTableItemDTO> Items, int TotalCount)> MentorsAsTableItemAsync(string q, int page = 1, int count = 10)
     {
-        var mentors = await _userManager.GetUsersInRoleAsync(MentorRole);
-
-        var query = mentors.AsQueryable();
+        var query = _userManager.Users.Where(u => u.Role == UserRole.Mentor);
+        
         if (!string.IsNullOrWhiteSpace(q))
         {
             query = query.Where(u => u.Email.Contains(q, StringComparison.OrdinalIgnoreCase) 
                                   || u.UserName.Contains(q, StringComparison.OrdinalIgnoreCase));
         }
 
-        var totalCount = query.Count();
+        var totalCount = await query.CountAsync();
 
-        var items = query
-            .Skip((page - 1) * count)
+        var items = await query
+            .Skip(page * count)
             .Take(count)
             .Select(u => new MentorTableItemDTO
             {
@@ -45,21 +45,22 @@ public class MentorService : IMentorService
                 Email = u.Email,
                 UserName = u.UserName,
                 FullName = u.FullName
-            })
-            .ToList();
+            }).ToListAsync();
 
         return (items, totalCount);
     }
 
     public async Task CreateAsync(MentorFormDTO dto)
     {
-        await _userManager.ThrowIfInRoleAsync(dto.Email, MentorRole); 
+        var existingUser = _userManager.FindByEmailAsync(dto.Email);
+        if (existingUser != null) throw new BaseException("Email already exists.");
 
         var user = new AppUser
         {
             UserName = dto.UserName,
             Email = dto.Email,
             FullName = dto.FullName,
+            Role = UserRole.Mentor
         };
 
         string randomPassword = Guid.NewGuid().ToString("N").Substring(0, 12);
@@ -68,8 +69,9 @@ public class MentorService : IMentorService
         
         if (result.Succeeded)
         {
-            await _userManager.AddToRoleAsync(user, MentorRole);
-            await _emailService.SendEmailAsync(user.Email, "test", randomPassword);
+            _ = _emailService.SendEmailAsync(user.Email, "test", randomPassword);
+            Console.WriteLine($"Email: {user.Email}");
+            Console.WriteLine($"Password: {randomPassword}");
         }
         else
         {

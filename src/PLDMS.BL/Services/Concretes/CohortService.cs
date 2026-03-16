@@ -5,6 +5,7 @@ using PLDMS.BL.Common;
 using PLDMS.BL.DTOs;
 using PLDMS.BL.Services.Abstractions;
 using PLDMS.Core.Entities;
+using PLDMS.Core.Enums;
 using PLDMS.DL.Contexts;
 using PLDMS.DL.Repositories.Abstractions;
 
@@ -17,7 +18,6 @@ public class CohortService : ICohortService
     private readonly IRepository<Program> _programRepository;
     private readonly UserManager<AppUser> _userManager;
     private readonly IMapper _mapper;
-    private const string StudentRole = "Student";
     
     public CohortService(AppDbContext context, IRepository<Cohort> cohortRepository,
         IRepository<Program> programRepository, UserManager<AppUser> userManager, IMapper mapper)
@@ -31,8 +31,8 @@ public class CohortService : ICohortService
 
     public async Task SyncStudentsInCohortAsync(int cohortId, IEnumerable<Guid> studentIds)
     {
-        var cohortExists = await _context.Cohorts.AnyAsync(c => c.Id == cohortId);
-        if (!cohortExists) throw new BaseException("Cohort not found.");
+        var cohort = await _context.Cohorts.FirstOrDefaultAsync(c => c.Id == cohortId);
+        if (cohort == null) throw new BaseException("Cohort not found.");
 
         var currentAssignments = await _context.StudentCohorts
             .Where(sc => sc.CohortId == cohortId)
@@ -62,6 +62,8 @@ public class CohortService : ICohortService
         {
             await _context.StudentCohorts.AddRangeAsync(studentIdsToAdd);
         }
+        
+        cohort.TotalStudentCount = studentIds.Count();
     }
 
     public async Task<ICollection<StudentSelectItemDTO>> GetStudentSelectItemsByCohortIdAsync(int id)
@@ -80,7 +82,7 @@ public class CohortService : ICohortService
     
     public async Task<ICollection<StudentSelectItemDTO>> GetStudentSelectItemsAsync()
     {
-        var students = await _userManager.GetUsersInRoleAsync(StudentRole);
+        var students = _userManager.Users.Where(u => u.Role == UserRole.Student);
 
         var items = students
             .Select(u => new StudentSelectItemDTO

@@ -8,7 +8,6 @@ using PLDMS.Core.Enums;
 using PLDMS.DL.Repositories.Abstractions;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity;
-using PLDMS.BL.Extension;
 using PLDMS.BL.Utilities;
 
 namespace PLDMS.BL.Services.Concretes;
@@ -20,7 +19,6 @@ public class StudentService : IStudentService
     private readonly IMapper _mapper;
     private readonly UserManager<AppUser> _userManager;
     private readonly IEmailService _emailService;
-    private const string StudentRole = "Student";
 
     public StudentService(UserManager<AppUser> userManager, IEmailService emailService, IRepository<Session> sessionRepository, IRepository<Review> reviewRepository, IMapper mapper)
     {
@@ -121,19 +119,18 @@ public class StudentService : IStudentService
 
     public async Task<(ICollection<StudentTableItemDTO> Items, int TotalCount)> StudentsAsTableItemAsync(string q, int page, int count)
     {
-        var students = await _userManager.GetUsersInRoleAsync(StudentRole);
-
-        var query = students.AsQueryable();
+        var query = _userManager.Users.Where(u => u.Role == UserRole.Student);
+        
         if (!string.IsNullOrWhiteSpace(q))
         {
             query = query.Where(u => u.Email.Contains(q, StringComparison.OrdinalIgnoreCase) 
                                   || u.FullName.Contains(q, StringComparison.OrdinalIgnoreCase));
         }
 
-        var totalCount = query.Count();
+        var totalCount = await query.CountAsync();
         
-        var items = query
-            .Skip((page - 1) * count)
+        var items = await query
+            .Skip(page * count)
             .Take(count)
             .Select(u => new StudentTableItemDTO
             {
@@ -141,20 +138,22 @@ public class StudentService : IStudentService
                 FullName = u.FullName,
                 UserName =  u.UserName,
                 Email = u.Email
-            }).ToList();
+            }).ToListAsync();
 
         return (items, totalCount);
     }
 
     public async Task CreateAsync(StudentFormDTO dto)
     {
-        await _userManager.ThrowIfInRoleAsync(dto.Email, StudentRole);
+        var existingUser = _userManager.FindByEmailAsync(dto.Email);
+        if (existingUser != null) throw new BaseException("Email already exists.");
         
         var user = new AppUser
         {
             UserName = dto.UserName,
             Email = dto.Email,
-            FullName = dto.FullName
+            FullName = dto.FullName,
+            Role = UserRole.Student
         };
 
         string randomPassword = Guid.NewGuid().ToString("N").Substring(0, 12);
@@ -162,9 +161,9 @@ public class StudentService : IStudentService
 
         if (result.Succeeded)
         {
-            await _userManager.AddToRoleAsync(user, StudentRole);
-            await _emailService.SendEmailAsync(user.Email, "test", randomPassword);
-
+            _ = _emailService.SendEmailAsync(user.Email, "test", randomPassword);
+            Console.WriteLine($"Email: {user.Email}");
+            Console.WriteLine($"Password: {randomPassword}");
         }
         else
         {

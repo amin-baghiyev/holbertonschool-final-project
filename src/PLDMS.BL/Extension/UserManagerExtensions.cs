@@ -1,25 +1,23 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PLDMS.BL.Common;
+using PLDMS.Core.Entities;
+using PLDMS.Core.Enums;
 
 namespace PLDMS.BL.Extension;
 
 public static class UserManagerExtensions
 {
-    public static async Task ThrowIfInRoleAsync<T>(this UserManager<T> manager, string email, string role) where T : class
+    public static async Task ThrowIfInRoleAsync<T>(this UserManager<T> manager, string email, UserRole role) where T : class
     {
-        var users = await manager.Users
-            .Where(u => EF.Property<string>(u, "Email") == email)
-            .ToListAsync();
-
-        foreach (var user in users)
+        if (!await manager.Users
+                .Where(u => 
+                    EF.Property<string>(u, nameof(AppUser.Email)) == email &&
+                    EF.Property<UserRole>(u, nameof(AppUser.Role)) == role)
+                .AnyAsync()
+            )
         {
-            if (await manager.IsInRoleAsync(user, role))
-            {
-                string userName = (user as dynamic).UserName;
-                throw new BaseException($"This {role} already exists with username: {userName}.");
-            }
+            throw new BaseException($"This {role} already exists with this email: {email}");
         }
     }
-
 }
