@@ -1,0 +1,103 @@
+@model ICollection<StudentSessionListItemDTO>
+
+@{
+    ViewData["Title"] = "My Sessions";
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    var totalCount = ViewBag.TotalCount as int? ?? 0;
+}
+
+<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0">
+    <h1 class="text-xl font-bold text-gray-800">My Sessions</h1>
+</header>
+
+<div class="flex-1 flex flex-col overflow-hidden p-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 shrink-0">
+        <div>
+            <h2 class="text-lg font-semibold text-gray-900">Assigned Sessions</h2>
+            <p class="text-sm text-gray-500">View your assigned educational sessions.</p>
+        </div>
+
+        <div class="flex gap-3">
+            <form asp-action="Index" method="get" class="flex flex-wrap gap-3 items-center">
+                <select name="status" class="bg-white border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-red-400">
+                    <option value="">Status: All</option>
+                    <option value="Upcoming">Upcoming</option>
+                    <option value="Active">Active</option>
+                    <option value="Finished">Finished</option>
+                </select>
+                <div class="flex items-center bg-white border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-red-400 transition-all">
+                    <i class="ph ph-magnifying-glass text-gray-400 mr-2"></i>
+                    <input type="text" name="q" placeholder="Search by name..." class="outline-none text-sm w-40 md:w-56 bg-transparent">
+                </div>
+                <button type="submit" class="bg-red-600 hover:bg-red-700 py-2.5 px-4 rounded-lg transition-all shadow-sm text-white">
+                    <i class="ph ph-magnifying-glass text-lg"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="flex-1 flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="flex-1 overflow-y-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_0_#e5e7eb]">
+                    <tr class="text-sm font-semibold text-gray-600">
+                        <th class="px-6 py-4">Session Name</th>
+                        <th class="px-6 py-4">Status</th>
+                        <th class="px-6 py-4">Time Range</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y text-sm bg-white divide-gray-200">
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            var statusColor = item.SessionStatus switch
+                            {
+                                SessionStatus.Upcoming => "bg-yellow-100 text-yellow-700",
+                                SessionStatus.Active => "bg-green-100 text-green-700",
+                                SessionStatus.Finished => "bg-gray-100 text-gray-700",
+                                _ => "bg-gray-100 text-gray-700"
+                            };
+
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 font-medium text-gray-900">@item.Name</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-medium @statusColor">@item.SessionStatus</span>
+                                </td>
+                                <td class="px-6 py-4 text-gray-600">
+                                    <div>@item.StartDate.ToString("dd MMM yyyy HH:mm")</div>
+                                    <div class="text-xs text-gray-400">to @item.EndDate.ToString("dd MMM yyyy HH:mm")</div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" class="py-12 text-center bg-gray-50 border border-dashed rounded-xl m-4">
+                                <div class="flex justify-center mb-2"><i class="ph ph-calendar-blank text-4xl text-gray-300"></i></div>
+                                <p class="text-gray-500">No sessions found matching your criteria.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-white shrink-0">
+            <div class="text-sm text-gray-500">
+                Total Results: <span class="font-medium text-gray-900">@totalCount</span>
+            </div>
+            <div class="flex gap-2">
+                @if (currentPage > 1)
+                {
+                    <a asp-action="Index" asp-route-page="@(currentPage - 1)" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">Previous</a>
+                }
+                @if (currentPage < totalPages)
+                {
+                    <a asp-action="Index" asp-route-page="@(currentPage + 1)" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">Next</a>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -27,6 +27,16 @@
             <i class="ph ph-squares-four text-xl"></i>
             <span class="font-medium">Dashboard</span>
         </a>
+        <a asp-area="Student" asp-controller="Session" asp-action="Index"
+           class="@NavClass("Session") flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
+            <i class="ph ph-calendar text-xl"></i>
+            <span class="font-medium">Sessions</span>
+        </a>
+        <a asp-area="Student" asp-controller="Review" asp-action="Index"
+           class="@NavClass("Review") flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
+            <i class="ph ph-chat-circle-dots text-xl"></i>
+            <span class="font-medium">Reviews</span>
+        </a>
     </nav>
 
     <div class="p-4 border-t border-gray-700">

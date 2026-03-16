@@ -1,0 +1,48 @@
+@model StudentReviewCreateDTO
+
+@{
+    ViewData["Title"] = "Submit Review";
+}
+
+<header class="h-16 bg-white border-b border-gray-200 flex items-center px-8 shrink-0">
+    <div class="flex items-center gap-4">
+        <a asp-action="Index" class="text-gray-500 hover:text-gray-900 transition-colors">
+            <i class="ph ph-arrow-left text-xl"></i>
+        </a>
+        <h1 class="text-xl font-bold text-gray-800">Submit Review</h1>
+    </div>
+</header>
+
+<div class="flex-1 overflow-y-auto p-8 bg-gray-50">
+    <div class="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl shadow-sm p-8">
+        <h2 class="text-lg font-semibold text-gray-900 mb-6">Review Information</h2>
+
+        <form asp-action="Create" method="post" class="space-y-6">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm mb-4"></div>
+
+            <div>
+                <label asp-for="Score" class="block text-sm font-medium text-gray-700 mb-1">Score (0-10) *</label>
+                <input asp-for="Score" type="number" min="0" max="10" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-400 focus:border-red-400 outline-none transition-all shadow-sm" />
+                <span asp-validation-for="Score" class="text-red-500 text-xs mt-1 block"></span>
+            </div>
+
+            <div>
+                <label asp-for="Note" class="block text-sm font-medium text-gray-700 mb-1">Review Note *</label>
+                <textarea asp-for="Note" rows="4" placeholder="Provide detailed feedback on what was good and what could be improved." class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-400 focus:border-red-400 outline-none transition-all shadow-sm"></textarea>
+                <span asp-validation-for="Note" class="text-red-500 text-xs mt-1 block"></span>
+            </div>
+
+            <div class="pt-4 border-t border-gray-100 flex justify-end gap-3">
+                <a asp-action="Index" class="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Cancel</a>
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors shadow-sm">
+                    Submit Review
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
