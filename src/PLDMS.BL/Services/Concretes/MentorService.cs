@@ -52,7 +52,7 @@ public class MentorService : IMentorService
 
     public async Task CreateAsync(MentorFormDTO dto)
     {
-        var existingUser = _userManager.FindByEmailAsync(dto.Email);
+        var existingUser = await _userManager.FindByEmailAsync(dto.Email);
         if (existingUser != null) throw new BaseException("Email already exists.");
 
         var user = new AppUser

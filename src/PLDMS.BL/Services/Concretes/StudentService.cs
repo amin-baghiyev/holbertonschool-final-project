@@ -145,7 +145,7 @@ public class StudentService : IStudentService
 
     public async Task CreateAsync(StudentFormDTO dto)
     {
-        var existingUser = _userManager.FindByEmailAsync(dto.Email);
+        var existingUser = await _userManager.FindByEmailAsync(dto.Email);
         if (existingUser != null) throw new BaseException("Email already exists.");
         
         var user = new AppUser
