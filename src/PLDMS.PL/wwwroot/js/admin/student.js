@@ -1,75 +1,47 @@
-const modal = document.getElementById('addProgramModal');
-const form = document.getElementById("createProgramForm");
+const modal = document.getElementById('studentModal');
+const form = document.getElementById('studentForm');
 const globalErrorContainer = document.getElementById('globalErrorContainer');
-let programId = null;
+let studentId = null;
 
 const openModal = () => {
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
-}
+};
 
 const closeModal = () => {
     modal.classList.add('hidden');
     document.body.style.overflow = 'auto';
-
-    programId = null;
-
+    studentId = null;
     form.reset();
-
     document.querySelectorAll('[data-valmsg-for]').forEach(span => span.textContent = '');
     globalErrorContainer.classList.add('hidden');
-    document.getElementById("modalTitle").innerText = "Create New Program";
-}
-
-const handleEditClick = (btn) => {
-    programId = btn.dataset.id;
-    const name = btn.dataset.name;
-    const duration = btn.dataset.duration;
-
-    const form = document.getElementById("createProgramForm");
-    form.querySelector('[name="Name"]').value = name;
-    form.querySelector('[name="Duration"]').value = duration;
-
-    document.getElementById("modalTitle").innerText = "Update Program";
-
-    openModal();
+    document.getElementById("modalTitle").innerText = "Create New Student";
 };
 
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-        closeModal();
-    }
-});
-
-document.addEventListener("click", (e) => {
+document.addEventListener("click", async (e) => {
     const target = e.target;
 
-    if (target.closest(".modal-overlay") || target.closest(".cancel-btn")) {
-        closeModal();
-        return;
-    }
+    if (target.closest(".add-student-btn")) openModal();
 
-    if (target.closest(".add-program") || target.closest(".save-program")) {
-        openModal();
-        return;
-    }
+    if (target.closest(".modal-overlay") || target.closest(".cancel-btn")) closeModal();
 
     const editBtn = target.closest(".edit-btn");
     if (editBtn) {
-        handleEditClick(editBtn);
+        studentId = editBtn.dataset.id;
+        form.querySelector('[name="FullName"]').value = editBtn.dataset.fullname;
+        form.querySelector('[name="Email"]').value = editBtn.dataset.email;
+        form.querySelector('[name="UserName"]').value = editBtn.dataset.username;
+
+        document.getElementById("modalTitle").innerText = "Update Student";
+        openModal();
     }
 });
 
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
-
     const formData = new FormData(form);
-    const isEdit = !!programId;
-
-    let url = '/Admin/Program/Create';
-    if (isEdit) {
-        url = `/Admin/Program/Update?id=${programId}`;
-    }
+    const isEdit = !!studentId;
+    const url = isEdit ? `/Admin/Student/Update?id=${studentId}` : '/Admin/Student/Create';
 
     try {
         const response = await fetch(url, {
@@ -97,7 +69,6 @@ form.addEventListener('submit', async (e) => {
         showValidationErrors({ "Error": ["A network error occurred. Please try again."] });
     }
 });
-
 function showValidationErrors(errors) {
     document.querySelectorAll('[data-valmsg-for]').forEach(span => span.textContent = '');
     globalErrorContainer.classList.add('hidden');
@@ -116,7 +87,6 @@ function showValidationErrors(errors) {
     }
 }
 
-// Escape key to close
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
 });

@@ -15,17 +15,15 @@ public class ProgramController : Controller
     {
         _programService = programService;
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> Index(string? q)
     {
         var programs = await _programService.ProgramsAsItemAsync(q ?? "");
-        
         ViewBag.CurrentSearch = q ?? "";
-        
         return View(programs);
     }
-    
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ProgramFormDTO dto)
@@ -37,11 +35,10 @@ public class ProgramController : Controller
 
         await _programService.CreateAsync(dto);
         await _programService.SaveChangesAsync();
-        
         return Created();
     }
-    
-    
+
+
     [HttpPut]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(ProgramFormDTO dto, int id)
@@ -53,7 +50,6 @@ public class ProgramController : Controller
 
         await _programService.UpdateAsync(id, dto);
         await _programService.SaveChangesAsync();
-        
         return Ok();
     }
 
@@ -63,27 +59,24 @@ public class ProgramController : Controller
     {
         await _programService.DeleteAsync(id);
         await _programService.SaveChangesAsync();
-        
         return Ok();
     }
-    
+
     [HttpPatch]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Deactivate(int id)
     {
         await _programService.SoftDeleteAsync(id);
         await _programService.SaveChangesAsync();
-        
         return Ok();
     }
-    
+
     [HttpPatch]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Activate(int id)
     {
         await _programService.RevertSoftDeleteAsync(id);
         await _programService.SaveChangesAsync();
-        
         return Ok();
     }
 }

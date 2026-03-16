@@ -7,6 +7,7 @@ using PLDMS.BL.Services.Abstractions;
 using PLDMS.BL.Services.Concretes;
 using PLDMS.BL.Utilities;
 using System.Reflection;
+using PLDMS.BL.Utilities;
 
 namespace PLDMS.BL;
 
@@ -31,6 +32,8 @@ public static class ConfigurationServices
         services.AddScoped<ICohortService, CohortService>();
         services.AddScoped<IExerciseService, ExerciseService>();
         services.AddScoped<ISessionService, SessionService>();
+        services.AddScoped<IMentorService, MentorService>();
         services.AddScoped<IStudentService, StudentService>();
+        services.AddScoped<IEmailService, EmailService>();
     }
 }

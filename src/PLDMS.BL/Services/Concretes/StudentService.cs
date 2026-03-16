@@ -7,6 +7,9 @@ using PLDMS.Core.Entities;
 using PLDMS.Core.Enums;
 using PLDMS.DL.Repositories.Abstractions;
 using System.Linq.Expressions;
+using Microsoft.AspNetCore.Identity;
+using PLDMS.BL.Extension;
+using PLDMS.BL.Utilities;
 
 namespace PLDMS.BL.Services.Concretes;
 
@@ -15,13 +18,19 @@ public class StudentService : IStudentService
     private readonly IRepository<Session> _sessionRepository;
     private readonly IRepository<Review> _reviewRepository;
     private readonly IMapper _mapper;
+    private readonly UserManager<AppUser> _userManager;
+    private readonly IEmailService _emailService;
+    private const string StudentRole = "Student";
 
-    public StudentService(IRepository<Session> sessionRepository, IRepository<Review> reviewRepository, IMapper mapper)
+    public StudentService(UserManager<AppUser> userManager, IEmailService emailService, IRepository<Session> sessionRepository, IRepository<Review> reviewRepository, IMapper mapper)
     {
         _sessionRepository = sessionRepository;
         _reviewRepository = reviewRepository;
         _mapper = mapper;
+        _userManager = userManager;
+        _emailService = emailService;
     }
+
 
     public async Task<(ICollection<StudentSessionListItemDTO> Items, int TotalCount)> GetSessionsAsync(
         Guid studentId, string? q = null, DateTime? startDate = null, DateTime? endDate = null, SessionStatus? status = null, int page = 0, int count = 25)
@@ -109,4 +118,80 @@ public class StudentService : IStudentService
         _reviewRepository.Update(review);
         await _reviewRepository.SaveChangesAsync();
     }
+
+    public async Task<(ICollection<StudentTableItemDTO> Items, int TotalCount)> StudentsAsTableItemAsync(string q, int page, int count)
+    {
+        var students = await _userManager.GetUsersInRoleAsync(StudentRole);
+
+        var query = students.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            query = query.Where(u => u.Email.Contains(q, StringComparison.OrdinalIgnoreCase) 
+                                  || u.FullName.Contains(q, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var totalCount = query.Count();
+        
+        var items = query
+            .Skip((page - 1) * count)
+            .Take(count)
+            .Select(u => new StudentTableItemDTO
+            {
+                Id = u.Id,
+                FullName = u.FullName,
+                UserName =  u.UserName,
+                Email = u.Email
+            }).ToList();
+
+        return (items, totalCount);
+    }
+
+    public async Task CreateAsync(StudentFormDTO dto)
+    {
+        await _userManager.ThrowIfInRoleAsync(dto.Email, StudentRole);
+        
+        var user = new AppUser
+        {
+            UserName = dto.UserName,
+            Email = dto.Email,
+            FullName = dto.FullName
+        };
+
+        string randomPassword = Guid.NewGuid().ToString("N").Substring(0, 12);
+        var result = await _userManager.CreateAsync(user, randomPassword);
+
+        if (result.Succeeded)
+        {
+            await _userManager.AddToRoleAsync(user, StudentRole);
+            await _emailService.SendEmailAsync(user.Email, "test", randomPassword);
+
+        }
+        else
+        {
+            throw new BaseException($"Failed to create student: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+        }
+    }
+
+    public async Task UpdateAsync(Guid id, StudentFormDTO dto)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user == null) throw new BaseException("User not found.");
+
+        user.Email = dto.Email;
+        user.FullName = dto.FullName;
+        user.UserName = dto.UserName;
+
+        await _userManager.UpdateAsync(user);
+    }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        
+        if (user == null) throw new BaseException("User not found.");
+        
+        await _userManager.DeleteAsync(user);
+    }
+
+    public Task<int> SaveChangesAsync() => Task.FromResult(0);
 }

@@ -1,180 +1,143 @@
-﻿<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
-    <div class="flex items-center gap-2">
-        <h1 class="text-xl font-bold text-gray-800">Mentors</h1>
-        <span class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">134 Active</span>
-    </div>
-    <div class="flex items-center gap-4">
-        <button class="p-2 text-gray-500 hover:bg-gray-100 rounded-full relative">
-            <i class="ph ph-bell text-xl"></i>
-            <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-brand-red rounded-full border-2 border-white"></span>
-        </button>
-    </div>
+﻿@using PLDMS.BL.DTOs.MentorDTOs
+@using PLDMS.PL.Areas.Admin.ViewModels
+@model MentorVM
+
+@{
+    var hasSearch = !string.IsNullOrWhiteSpace(Context.Request.Query["q"]);
+    var startItem = Model.TotalCount == 0 ? 0 : Model.CurrentPage * Model.PageSize + 1;
+    var endItem = Math.Min((Model.CurrentPage + 1) * Model.PageSize, Model.TotalCount);
+    var totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+}
+
+<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0">
+    <h1 class="text-xl font-bold text-gray-800">Mentor Management</h1>
+    <button class="add-mentor-btn flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm">
+        <i class="ph ph-plus-circle text-lg"></i>
+        <span class="hidden sm:inline">Add Mentor</span>
+    </button>
+    <partial name="_MentorModal" model="new MentorFormDTO()" />
 </header>
 
-<div class="flex-1 overflow-y-auto p-8">
-    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-        <div class="relative w-full sm:w-96">
-            <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
-            <input type="text" placeholder="Search by fullname, email or phone..."
-                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red transition-colors">
+<div class="flex-1 flex flex-col overflow-hidden p-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 shrink-0">
+        <div>
+            <h2 class="text-lg font-semibold text-gray-900">Mentors</h2>
+            <p class="text-sm text-gray-500">Manage mentor accounts and access.</p>
         </div>
 
-        <button onclick="window.location.href='create-user.html?role=mentor'"
-                class="flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm whitespace-nowrap">
-            <i class="ph ph-plus-circle text-lg"></i>
-            Add New Mentor
-        </button>
+        <div class="flex gap-3">
+            <form asp-action="Index" method="get" class="flex gap-3">
+                <div class="flex items-center bg-white border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-brand-red/20 transition-all">
+                    <i class="ph ph-magnifying-glass text-gray-400 mr-2"></i>
+                    <input type="text" name="q" value="@Context.Request.Query["q"]"
+                           placeholder="Search by name or email..."
+                           class="outline-none text-sm w-40 md:w-64 bg-transparent">
+                    @if (hasSearch)
+                    {
+                        <a asp-action="Index" class="ml-2 text-gray-400 hover:text-brand-red">
+                            <i class="ph ph-x-circle"></i>
+                        </a>
+                    }
+                </div>
+                <button type="submit" class="bg-brand-red hover:bg-red-700 py-2.5 px-5 rounded-lg transition-all shadow-sm">
+                    <i class="ph ph-magnifying-glass text-white font-large"></i>
+                </button>
+            </form>
+        </div>
     </div>
 
-    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                <tr class="bg-gray-50 border-b border-gray-200 text-sm font-semibold text-gray-600">
-                    <th class="px-6 py-4">Fullname</th>
-                    <th class="px-6 py-4">Contact Info</th>
-                    <th class="px-6 py-4">Date Added</th>
-                    <th class="px-6 py-4">Status</th>
-                    <th class="px-6 py-4 text-right">Actions</th>
-                </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 text-sm">
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <img src="https://ui-avatars.com/api/?name=Elvin+Qasimov&background=EBF4FF&color=1E40AF"
-                                 class="w-9 h-9 rounded-full">
-                            <div>
-                                <p class="font-medium text-gray-900">Elvin Qasımov</p>
-                                <p class="text-xs text-gray-500">ID: MEN-001</p>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <p class="text-gray-800">elvin.q@example.com</p>
-                        <p class="text-gray-500 text-xs mt-0.5">+994 50 123 45 67</p>
-                    </td>
-                    <td class="px-6 py-4 text-gray-600">
-                        12 Jan 2024
-                    </td>
-                    <td class="px-6 py-4">
-                                        <span
-                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                                            Active
-                                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <div class="flex justify-end gap-2">
-                            <button
-                                class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                title="Edit">
-                                <i class="ph ph-pencil-simple text-lg"></i>
-                            </button>
-                            <button
-                                class="p-1.5 text-gray-500 hover:text-brand-red hover:bg-red-50 rounded transition-colors"
-                                title="Delete">
-                                <i class="ph ph-trash text-lg"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
+    <div class="flex-1 flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="flex-1 overflow-y-auto">
+            @if (Model.Mentors != null && Model.Mentors.Any())
+            {
+                <table class="min-w-full">
+                    <thead class="sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_0_#e5e7eb]">
+                        <tr class="text-sm font-semibold text-gray-600">
+                            <th class="px-6 py-4 text-left">Full Name</th>
+                            <th class="px-6 py-4 text-left">Email</th>
+                            <th class="px-6 py-4 text-left">Username</th>
+                            <th class="px-6 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 text-sm">
+                        @foreach (var item in Model.Mentors)
+                        {
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 font-medium text-gray-900">@item.FullName</td>
+                                <td class="px-6 py-4 text-gray-600">@item.Email</td>
+                                <td class="px-6 py-4 text-gray-600">@item.UserName</td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="edit-btn text-gray-500 hover:text-blue-600"
+                                            data-id="@item.Id"
+                                            data-fullname="@item.FullName"
+                                            data-email="@item.Email"
+                                            data-username="@item.UserName"
+                                            >
+                                        <i class="ph ph-pencil-simple text-lg"></i>
+                                    </button>
 
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <img src="https://ui-avatars.com/api/?name=Aysel+Mammadova&background=FCE7F3&color=9D174D"
-                                 class="w-9 h-9 rounded-full">
-                            <div>
-                                <p class="font-medium text-gray-900">Aysel Məmmədova</p>
-                                <p class="text-xs text-gray-500">ID: MEN-002</p>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <p class="text-gray-800">aysel.m@example.com</p>
-                        <p class="text-gray-500 text-xs mt-0.5">+994 55 987 65 43</p>
-                    </td>
-                    <td class="px-6 py-4 text-gray-600">
-                        05 Feb 2024
-                    </td>
-                    <td class="px-6 py-4">
-                                        <span
-                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                                            Active
-                                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <div class="flex justify-end gap-2">
-                            <button
-                                class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                title="Edit">
-                                <i class="ph ph-pencil-simple text-lg"></i>
-                            </button>
-                            <button
-                                class="p-1.5 text-gray-500 hover:text-brand-red hover:bg-red-50 rounded transition-colors"
-                                title="Delete">
-                                <i class="ph ph-trash text-lg"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr class="bg-gray-50/50 hover:bg-gray-50 transition-colors opacity-75">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <img src="https://ui-avatars.com/api/?name=Tarlan+Aliyev&background=F3F4F6&color=4B5563"
-                                 class="w-9 h-9 rounded-full grayscale">
-                            <div>
-                                <p class="font-medium text-gray-600">Tərlan Əliyev</p>
-                                <p class="text-xs text-gray-500">ID: MEN-003</p>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <p class="text-gray-600">tarlan.a@example.com</p>
-                        <p class="text-gray-500 text-xs mt-0.5">+994 70 456 78 90</p>
-                    </td>
-                    <td class="px-6 py-4 text-gray-500">
-                        20 Nov 2023
-                    </td>
-                    <td class="px-6 py-4">
-                                        <span
-                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-600">
-                                            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
-                                            Deleted
-                                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <div class="flex justify-end gap-2">
-                            <button
-                                class="p-1.5 text-gray-400 hover:text-gray-800 hover:bg-gray-200 rounded transition-colors"
-                                title="Restore">
-                                <i class="ph ph-arrow-counter-clockwise text-lg"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+                                    <button data-url="@Url.Action("Delete", "Mentor", new { id = item.Id })"
+                                            data-type="Delete"
+                                            data-name="@item.FullName"
+                                            class="trash-btn text-gray-500 hover:text-brand-red">
+                                        <i class="ph ph-trash text-lg"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="py-12 text-center bg-gray-50 border border-dashed rounded-xl">
+                    <i class="ph ph-users text-4xl text-gray-300 mb-2"></i>
+                    <p class="text-gray-500">@(hasSearch ? "No mentors match your search." : "No mentors registered yet.")</p>
+                </div>
+            }
         </div>
 
-        <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-            <p class="text-sm text-gray-500">Showing <span class="font-medium text-gray-900">1</span> to <span
-                    class="font-medium text-gray-900">10</span> of <span class="font-medium text-gray-900">134</span>
-                mentors</p>
+        @* Pagination Footer *@
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-white shrink-0">
+            <div class="flex items-center gap-6">
+                <div class="hidden sm:block text-sm text-gray-500">
+                    Showing <span class="font-medium text-gray-900">@startItem</span> - <span class="font-medium text-gray-900">@endItem</span> of <span class="font-medium text-gray-900">@Model.TotalCount</span>
+                </div>
+                <form method="get" asp-action="Index" class="flex items-center gap-2 text-sm">
+                    <input type="hidden" name="q" value="@Model.Search" />
+                    <select name="pageSize" onchange="this.form.submit()" class="border border-gray-200 rounded-lg px-2 py-1 text-gray-700 outline-none">
+                        @foreach (var size in new[] { 5, 10, 15, 20 })
+                        {
+                            <option value="@size" selected="@(Model.PageSize == size)">@size</option>
+                        }
+                    </select>
+                    <span class="text-gray-500">per page</span>
+                </form>
+            </div>
+
             <div class="flex gap-2">
-                <button
-                    class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled>Previous
-                </button>
-                <button
-                    class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">
+                <a asp-action="Index" asp-route-q="@Model.Search" asp-route-page="@(Model.CurrentPage - 1)" asp-route-pageSize="@Model.PageSize"
+                   class="px-3 py-1.5 border rounded-lg text-sm font-medium @(Model.CurrentPage == 0 ? "opacity-50 pointer-events-none bg-gray-50" : "hover:bg-gray-50")">
+                    Previous
+                </a>
+                <div class="hidden sm:flex gap-1">
+                    @for (var i = 0; i < totalPages; i++)
+                    {
+                        <a asp-action="Index" asp-route-q="@Model.Search" asp-route-page="@i" asp-route-pageSize="@Model.PageSize"
+                           class="px-3 py-1.5 border rounded-lg text-sm font-medium @(i == Model.CurrentPage ? "border-red-200 bg-red-50 text-red-600" : "border-transparent hover:bg-gray-50")">
+                            @(i + 1)
+                        </a>
+                    }
+                </div>
+                <a asp-action="Index" asp-route-q="@Model.Search" asp-route-page="@(Model.CurrentPage + 1)" asp-route-pageSize="@Model.PageSize"
+                   class="px-3 py-1.5 border rounded-lg text-sm font-medium @(Model.CurrentPage >= totalPages - 1 ? "opacity-50 pointer-events-none bg-gray-50" : "hover:bg-gray-50")">
                     Next
-                </button>
+                </a>
             </div>
         </div>
     </div>
-
 </div>
+
+@section Scripts {
+    <script type="module" src="~/js/admin/mentor.js"></script>
+}

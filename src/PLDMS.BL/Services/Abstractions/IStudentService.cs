@@ -14,4 +14,10 @@ public interface IStudentService
     Task<StudentReviewCreateDTO?> GetReviewForEditAsync(Guid reviewId, Guid studentId);
     
     Task SubmitReviewAsync(Guid reviewId, Guid studentId, StudentReviewCreateDTO dto);
+
+    Task<(ICollection<StudentTableItemDTO> Items, int TotalCount)> StudentsAsTableItemAsync(string q, int page, int count);
+    Task CreateAsync(StudentFormDTO dto);
+    Task UpdateAsync(Guid id, StudentFormDTO dto);
+    Task DeleteAsync(Guid id);
+    Task<int> SaveChangesAsync();
 }

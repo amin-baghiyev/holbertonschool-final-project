@@ -9,6 +9,7 @@ public static class ConfigurationServices
 {
     public static void AddDLServices(this IServiceCollection services)
     {
+        services.AddScoped<IRepository<AppUser>, Repository<AppUser>>();
         services.AddScoped<IRepository<Cohort>, Repository<Cohort>>();
         services.AddScoped<IRepository<Group>, Repository<Group>>();
         services.AddScoped<IRepository<Program>, Repository<Program>>();

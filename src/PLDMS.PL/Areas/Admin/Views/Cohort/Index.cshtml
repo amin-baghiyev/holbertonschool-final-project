@@ -1,4 +1,4 @@
-﻿@model CohortVM
+@model CohortVM
 
 @{
     var hasSearch = !string.IsNullOrWhiteSpace(Context.Request.Query["q"]);
@@ -22,6 +22,7 @@
         <span class="hidden sm:inline">Add Cohort</span>
     </button>
     <partial name="_CohortModal" model="new CohortFormDTO()"/>
+    <partial name="_AddStudentsToCohortModal" model="new AddStudentsRequest()"/>
 </header>
 
 <div class="flex-1 flex flex-col overflow-hidden p-8">
@@ -105,6 +106,12 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-right">
+                                <button type="button" 
+                                        class="open-add-students-modal-btn p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                        data-id="@item.Id"
+                                        title="Add Students">
+                                    <i class="ph ph-user-plus text-xl"></i>
+                                </button>
                                 <button class="edit-btn text-gray-500 hover:text-blue-600"
                                         data-id="@item.Id"
                                         data-name="@item.Name"

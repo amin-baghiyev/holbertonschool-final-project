@@ -1,26 +1,98 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PLDMS.BL.Common;
 using PLDMS.BL.DTOs;
 using PLDMS.BL.Services.Abstractions;
 using PLDMS.Core.Entities;
+using PLDMS.DL.Contexts;
 using PLDMS.DL.Repositories.Abstractions;
 
 namespace PLDMS.BL.Services.Concretes;
 
 public class CohortService : ICohortService
 {
+    private readonly AppDbContext _context;
     private readonly IRepository<Cohort> _cohortRepository;
     private readonly IRepository<Program> _programRepository;
+    private readonly UserManager<AppUser> _userManager;
     private readonly IMapper _mapper;
+    private const string StudentRole = "Student";
     
-    public CohortService(IRepository<Cohort> cohortRepository, IRepository<Program> programRepository, IMapper mapper)
+    public CohortService(AppDbContext context, IRepository<Cohort> cohortRepository,
+        IRepository<Program> programRepository, UserManager<AppUser> userManager, IMapper mapper)
     {
+        _context = context;
         _cohortRepository = cohortRepository;
         _programRepository = programRepository;
+        _userManager = userManager;
         _mapper = mapper;
     }
+
+    public async Task SyncStudentsInCohortAsync(int cohortId, IEnumerable<Guid> studentIds)
+    {
+        var cohortExists = await _context.Cohorts.AnyAsync(c => c.Id == cohortId);
+        if (!cohortExists) throw new BaseException("Cohort not found.");
+
+        var currentAssignments = await _context.StudentCohorts
+            .Where(sc => sc.CohortId == cohortId)
+            .ToListAsync();
+
+        var currentStudentIds = currentAssignments.Select(sc => sc.StudentId).ToList();
+
+        var assignmentsToRemove = currentAssignments
+            .Where(sc => !studentIds.Contains(sc.StudentId))
+            .ToList();
+
+        var studentIdsToAdd = studentIds
+            .Except(currentStudentIds)
+            .Select(sId => new StudentCohort
+            {
+                CohortId = cohortId,
+                StudentId = sId
+            })
+            .ToList();
+
+        if (assignmentsToRemove.Any())
+        {
+            _context.StudentCohorts.RemoveRange(assignmentsToRemove);
+        }
+
+        if (studentIdsToAdd.Any())
+        {
+            await _context.StudentCohorts.AddRangeAsync(studentIdsToAdd);
+        }
+    }
+
+    public async Task<ICollection<StudentSelectItemDTO>> GetStudentSelectItemsByCohortIdAsync(int id)
+    {
+        return await _context.StudentCohorts
+            .AsNoTracking()
+            .Where(sc => sc.CohortId == id)
+            .Select(sc => new StudentSelectItemDTO
+            {
+                Id = sc.Student.Id,
+                FullName = sc.Student.FullName,
+                Email = sc.Student.Email,
+            })
+            .ToListAsync();
+    }
     
+    public async Task<ICollection<StudentSelectItemDTO>> GetStudentSelectItemsAsync()
+    {
+        var students = await _userManager.GetUsersInRoleAsync(StudentRole);
+
+        var items = students
+            .Select(u => new StudentSelectItemDTO
+            {
+                Id = u.Id,
+                FullName = u.FullName,
+                Email = u.Email
+            }).ToList();
+
+        return items;
+    }
+
     public async Task<(ICollection<CohortTableItemDTO> Items, int TotalCount)> CohortsAsTableItemAsync(string q, int page = 0, int count = 10)
     {
         var (cohorts, totalCount) = await _cohortRepository.GetAllAsync(c=> 
@@ -59,6 +131,19 @@ public class CohortService : ICohortService
         );
 
         return _mapper.Map<ICollection<CohortOptionItemDTO>>(cohorts);
+    }
+    
+    public async Task<ICollection<ProgramOptionItemDTO>> GetProgramSelectItemsAsync()
+    {
+        var (programs, totalCount) = await _programRepository.GetAllAsync();
+
+        ICollection<ProgramOptionItemDTO> selectItemDtos = programs.Select(p => new ProgramOptionItemDTO
+        {
+            Id = p.Id,
+            Name = p.Name,
+        }).ToList();
+        
+        return selectItemDtos;
     }
 
     public async Task CreateAsync(CohortFormDTO dto)

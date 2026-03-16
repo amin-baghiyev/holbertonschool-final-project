@@ -1,62 +1,47 @@
-const modal = document.getElementById('addProgramModal');
-const form = document.getElementById("createProgramForm");
+const modal = document.getElementById('mentorModal');
+const form = document.getElementById('mentorForm');
 const globalErrorContainer = document.getElementById('globalErrorContainer');
-let programId = null;
+let mentorId = null;
 
 const openModal = () => {
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
-}
+};
 
 const closeModal = () => {
     modal.classList.add('hidden');
     document.body.style.overflow = 'auto';
-
-    programId = null;
-
+    mentorId = null;
     form.reset();
-
     document.querySelectorAll('[data-valmsg-for]').forEach(span => span.textContent = '');
     globalErrorContainer.classList.add('hidden');
-    document.getElementById("modalTitle").innerText = "Create New Program";
-}
-
-const handleEditClick = (btn) => {
-    programId = btn.dataset.id;
-    const name = btn.dataset.name;
-    const duration = btn.dataset.duration;
-
-    const form = document.getElementById("createProgramForm");
-    form.querySelector('[name="Name"]').value = name;
-    form.querySelector('[name="Duration"]').value = duration;
-
-    document.getElementById("modalTitle").innerText = "Update Program";
-
-    openModal();
+    document.getElementById("modalTitle").innerText = "Create New Mentor";
 };
 
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-        closeModal();
-    }
-});
-
-document.addEventListener("click", (e) => {
+// Global Click Handlers
+document.addEventListener("click", async (e) => {
     const target = e.target;
 
+    // Open Create Modal
+    if (target.closest(".add-mentor-btn")) {
+        openModal();
+    }
+
+    // Close Modal
     if (target.closest(".modal-overlay") || target.closest(".cancel-btn")) {
         closeModal();
-        return;
     }
 
-    if (target.closest(".add-program") || target.closest(".save-program")) {
-        openModal();
-        return;
-    }
-
+    // Open Edit Modal
     const editBtn = target.closest(".edit-btn");
     if (editBtn) {
-        handleEditClick(editBtn);
+        mentorId = editBtn.dataset.id;
+        form.querySelector('[name="FullName"]').value = editBtn.dataset.fullname;
+        form.querySelector('[name="Email"]').value = editBtn.dataset.email;
+        form.querySelector('[name="UserName"]').value = editBtn.dataset.username;
+
+        document.getElementById("modalTitle").innerText = "Update Mentor";
+        openModal();
     }
 });
 
@@ -64,11 +49,11 @@ form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const formData = new FormData(form);
-    const isEdit = !!programId;
+    const isEdit = !!mentorId;
 
-    let url = '/Admin/Program/Create';
+    let url = '/Admin/Mentor/Create';
     if (isEdit) {
-        url = `/Admin/Program/Update?id=${programId}`;
+        url = `/Admin/Mentor/Update?id=${mentorId}`;
     }
 
     try {

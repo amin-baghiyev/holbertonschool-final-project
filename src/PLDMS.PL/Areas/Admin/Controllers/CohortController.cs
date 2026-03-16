@@ -20,12 +20,35 @@ public class CohortController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetPrograms()
+    public async Task<IActionResult> GetStudentsByCohortId(int id)
     {
-        var programs = await _programService.ProgramsAsOptionItemAsync();
-        return Json(programs);
+        var students = await _cohortService.GetStudentSelectItemsByCohortIdAsync(id);
+        return Json(students);
     }
     
+    [HttpGet]
+    public async Task<IActionResult> GetStudents()
+    {
+        var students = await _cohortService.GetStudentSelectItemsAsync();
+        return Json(students);
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> AddStudentsToCohort([FromBody] AddStudentsRequest request)
+    {
+        await _cohortService.SyncStudentsInCohortAsync(request.CohortId, request.StudentIds);
+        await _cohortService.SaveChangesAsync();
+        
+        return Ok(new { success = true });
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetPrograms()
+    {
+        var programs = await _cohortService.GetProgramSelectItemsAsync();
+        return Json(programs);
+    }
+
     [HttpGet]
     public async Task<IActionResult> Index(string? q, int page, int pageSize = 10)
     {
@@ -39,7 +62,7 @@ public class CohortController : Controller
         };
         
         var (cohorts, totalCount) = await _cohortService.CohortsAsTableItemAsync(q ?? "", page, pageSize);
-        
+
         var vm = new CohortVM
         {
             Cohorts = cohorts,
@@ -48,10 +71,10 @@ public class CohortController : Controller
             PageSize = pageSize,
             Search = q ?? ""
         };
-        
+
         return View(vm);
     }
-    
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CohortFormDTO dto)
@@ -66,8 +89,8 @@ public class CohortController : Controller
         
         return Created();
     }
-    
-    
+
+
     [HttpPut]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(CohortFormDTO dto, int id)
@@ -79,7 +102,6 @@ public class CohortController : Controller
 
         await _cohortService.UpdateAsync(id, dto);
         await _cohortService.SaveChangesAsync();
-        
         return Ok();
     }
 
@@ -92,24 +114,22 @@ public class CohortController : Controller
 
         return Ok();
     }
-    
+
     [HttpPatch]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Deactivate(int id)
     {
         await _cohortService.SoftDeleteAsync(id);
         await _cohortService.SaveChangesAsync();
-        
         return Ok();
     }
-    
+
     [HttpPatch]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Activate(int id)
     {
         await _cohortService.RevertSoftDeleteAsync(id);
         await _cohortService.SaveChangesAsync();
-        
         return Ok();
     }
 }
