@@ -39,7 +39,7 @@ public class CohortController : Controller
         await _cohortService.SyncStudentsInCohortAsync(request.CohortId, request.StudentIds);
         await _cohortService.SaveChangesAsync();
         
-        return Ok(new { success = true });
+        return Ok();
     }
     
     [HttpGet]

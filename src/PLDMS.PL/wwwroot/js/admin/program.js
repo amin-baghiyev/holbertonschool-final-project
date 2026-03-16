@@ -1,122 +1,70 @@
 const modal = document.getElementById('addProgramModal');
 const form = document.getElementById("createProgramForm");
-const globalErrorContainer = document.getElementById('globalErrorContainer');
+const globalError = document.getElementById('globalErrorContainer');
+
 let programId = null;
 
-const openModal = () => {
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
+const toggleModal = (show) => {
+    modal.classList.toggle('hidden', !show);
+    document.body.style.overflow = show ? 'hidden' : 'auto';
 
-const closeModal = () => {
-    modal.classList.add('hidden');
-    document.body.style.overflow = 'auto';
-
-    programId = null;
-
-    form.reset();
-
-    document.querySelectorAll('[data-valmsg-for]').forEach(span => span.textContent = '');
-    globalErrorContainer.classList.add('hidden');
-    document.getElementById("modalTitle").innerText = "Create New Program";
-}
-
-const handleEditClick = (btn) => {
-    programId = btn.dataset.id;
-    const name = btn.dataset.name;
-    const duration = btn.dataset.duration;
-
-    const form = document.getElementById("createProgramForm");
-    form.querySelector('[name="Name"]').value = name;
-    form.querySelector('[name="Duration"]').value = duration;
-
-    document.getElementById("modalTitle").innerText = "Update Program";
-
-    openModal();
-};
-
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-        closeModal();
+    if (!show) {
+        programId = null;
+        form.reset();
+        document.querySelectorAll('[data-valmsg-for]').forEach(x => x.textContent = '');
+        globalError.classList.add('hidden');
+        document.getElementById("modalTitle").innerText = "Create New Program";
     }
-});
+};
 
 document.addEventListener("click", (e) => {
     const target = e.target;
 
-    if (target.closest(".modal-overlay") || target.closest(".cancel-btn")) {
-        closeModal();
-        return;
-    }
-
-    if (target.closest(".add-program") || target.closest(".save-program")) {
-        openModal();
-        return;
-    }
+    if (target.closest(".add-program")) return toggleModal(true);
+    if (target.closest(".modal-overlay") || target.closest(".cancel-btn")) return toggleModal(false);
 
     const editBtn = target.closest(".edit-btn");
     if (editBtn) {
-        handleEditClick(editBtn);
+        programId = editBtn.dataset.id;
+        form.Name.value = editBtn.dataset.name;
+        form.Duration.value = editBtn.dataset.duration;
+
+        document.getElementById("modalTitle").innerText = "Update Program";
+        toggleModal(true);
     }
 });
 
-form.addEventListener('submit', async (e) => {
+form.addEventListener('submit', async e => {
     e.preventDefault();
 
-    const formData = new FormData(form);
-    const isEdit = !!programId;
+    const url = programId
+        ? `/Admin/Program/Update?id=${programId}`
+        : '/Admin/Program/Create';
 
-    let url = '/Admin/Program/Create';
-    if (isEdit) {
-        url = `/Admin/Program/Update?id=${programId}`;
-    }
+    const res = await fetch(url, {
+        method: programId ? 'PUT' : 'POST',
+        body: new FormData(form),
+        headers: { 'Accept': 'application/json' }
+    });
 
-    try {
-        const response = await fetch(url, {
-            method: isEdit ? 'PUT' : 'POST',
-            body: formData,
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
+    if (res.ok) return location.reload();
 
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.indexOf("application/json") !== -1) {
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                window.location.reload();
-            } else {
-                showValidationErrors(result.errors);
-            }
-        } else {
-            showValidationErrors({ "Error": ["Server returned an unexpected response format."] });
-        }
-    } catch (err) {
-        showValidationErrors({ "Error": ["A network error occurred. Please try again."] });
-    }
+    const data = await res.json();
+    showValidationErrors(data.errors);
 });
 
 function showValidationErrors(errors) {
-    document.querySelectorAll('[data-valmsg-for]').forEach(span => span.textContent = '');
-    globalErrorContainer.classList.add('hidden');
+    document.querySelectorAll('[data-valmsg-for]').forEach(x => x.textContent = '');
 
     if (!errors) return;
 
-    for (const key in errors) {
+    Object.entries(errors).forEach(([key, value]) => {
         const span = document.querySelector(`[data-valmsg-for="${key}"]`);
-        if (span) {
-            span.textContent = errors[key][0];
-
-            if (key === "Error") {
-                globalErrorContainer.classList.remove('hidden');
-            }
-        }
-    }
+        if (span) span.textContent = value[0];
+    });
 }
 
-// Escape key to close
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden'))
+        toggleModal(false);
 });

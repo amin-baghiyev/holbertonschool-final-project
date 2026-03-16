@@ -49,20 +49,12 @@ public class MentorController : Controller
     {
         if (!ModelState.IsValid)
         {
-            var errors = ModelState
-                .Where(x => x.Value.Errors.Count > 0)
-                .ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-                );
-
-            return BadRequest(new { success = false, errors });
+            return ValidationProblem(ModelState);
         }
 
         await _mentorService.CreateAsync(dto);
         await _mentorService.SaveChangesAsync();
-
-        return Json(new { success = true });
+        return Ok();
     }
 
 
@@ -72,20 +64,13 @@ public class MentorController : Controller
     {
         if (!ModelState.IsValid)
         {
-            var errors = ModelState
-                .Where(x => x.Value.Errors.Count > 0)
-                .ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-                );
-
-            return BadRequest(new { success = false, errors });
+            return ValidationProblem(ModelState);
         }
 
         await _mentorService.UpdateAsync(id, dto);
         await _mentorService.SaveChangesAsync();
 
-        return Json(new { success = true });
+        return Ok();
     }
 
     [HttpDelete]
@@ -95,6 +80,6 @@ public class MentorController : Controller
         await _mentorService.DeleteAsync(id);
         await _mentorService.SaveChangesAsync();
 
-        return Json(new { success = true });
+        return Ok();
     }
 }

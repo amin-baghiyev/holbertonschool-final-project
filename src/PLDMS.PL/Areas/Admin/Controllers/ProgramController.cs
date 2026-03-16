@@ -35,7 +35,7 @@ public class ProgramController : Controller
 
         await _programService.CreateAsync(dto);
         await _programService.SaveChangesAsync();
-        return Created();
+        return Ok();
     }
 
 

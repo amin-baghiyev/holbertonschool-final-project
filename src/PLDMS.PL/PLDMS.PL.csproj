@@ -19,6 +19,10 @@
 
     <ItemGroup>
       <_ContentIncludedByDefault Remove="Areas\Mentor\Views\Dashboard\Index.cshtml" />
+      <_ContentIncludedByDefault Remove="wwwroot\js\core\api.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\js\core\form-validation.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\js\core\modal.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\js\core\table-actions.js" />
     </ItemGroup>
 
     <ItemGroup>

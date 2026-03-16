@@ -96,32 +96,16 @@ document.getElementById('confirmAddStudents').addEventListener('click', async ()
         studentIds: Array.from(selectedStudentIds)
     };
 
-    try {
-        const response = await fetch('/Admin/Cohort/AddStudentsToCohort', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify(payload)
-        });
+    const res = await fetch('/Admin/Cohort/AddStudentsToCohort', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
 
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.indexOf("application/json") !== -1) {
-            const result = await response.json();
+    if (res.ok) return location.reload();
 
-            if (response.ok && result.success) {
-                window.location.reload();
-            } else {
-                showValidationErrors(result.errors);
-            }
-        } else {
-            showValidationErrors({ "Error": ["Server returned an unexpected response format."] });
-        }
-    } catch (err) {
-        console.error("Network Error:", err);
-        showValidationErrors({ "Error": ["A network error occurred. Please try again."] });
-    }
+    const data = await res.json();
+    showValidationErrors(data.errors);
 });
 
 const fetchPrograms = async () => {
@@ -214,60 +198,34 @@ document.addEventListener("click", async(e) => {
     }
 });
 
-form.addEventListener('submit', async (e) => {
+form.addEventListener('submit', async e => {
     e.preventDefault();
 
-    const formData = new FormData(form);
-    const isEdit = !!cohortId;
+    const url = cohortId
+        ? `/Admin/Cohort/Update?id=${cohortId}`
+        : '/Admin/Cohort/Create';
 
-    let url = '/Admin/Cohort/Create';
-    if (isEdit) {
-        url = `/Admin/Cohort/Update?id=${cohortId}`;
-    }
+    const res = await fetch(url, {
+        method: cohortId ? 'PUT' : 'POST',
+        body: new FormData(form),
+        headers: { 'Accept': 'application/json' }
+    });
 
-    try {
-        const response = await fetch(url, {
-            method: isEdit ? 'PUT' : 'POST',
-            body: formData,
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
+    if (res.ok) return location.reload();
 
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.indexOf("application/json") !== -1) {
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                window.location.reload();
-            } else {
-                showValidationErrors(result.errors);
-            }
-        } else {
-            showValidationErrors({ "Error": ["Server returned an unexpected response format."] });
-        }
-    } catch (err) {
-        showValidationErrors({ "Error": ["A network error occurred. Please try again."] });
-    }
+    const data = await res.json();
+    showValidationErrors(data.errors);
 });
 
-const showValidationErrors = (errors) => {
-    document.querySelectorAll('[data-valmsg-for]').forEach(span => span.textContent = '');
-    globalErrorContainer.classList.add('hidden');
+function showValidationErrors(errors) {
+    document.querySelectorAll('[data-valmsg-for]').forEach(x => x.textContent = '');
 
     if (!errors) return;
 
-    for (const key in errors) {
+    Object.entries(errors).forEach(([key, value]) => {
         const span = document.querySelector(`[data-valmsg-for="${key}"]`);
-        if (span) {
-            span.textContent = errors[key][0];
-
-            if (key === "Error") {
-                globalErrorContainer.classList.remove('hidden');
-            }
-        }
-    }
+        if (span) span.textContent = value[0];
+    });
 }
 
 document.addEventListener('keydown', (e) => {

@@ -1,107 +1,70 @@
 const modal = document.getElementById('mentorModal');
 const form = document.getElementById('mentorForm');
-const globalErrorContainer = document.getElementById('globalErrorContainer');
+const globalError = document.getElementById('globalErrorContainer');
+
 let mentorId = null;
 
-const openModal = () => {
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+const toggleModal = (show) => {
+    modal.classList.toggle('hidden', !show);
+    document.body.style.overflow = show ? 'hidden' : 'auto';
+
+    if (!show) {
+        mentorId = null;
+        form.reset();
+        document.querySelectorAll('[data-valmsg-for]').forEach(x => x.textContent = '');
+        globalError.classList.add('hidden');
+        document.getElementById("modalTitle").innerText = "Create New Program";
+    }
 };
 
-const closeModal = () => {
-    modal.classList.add('hidden');
-    document.body.style.overflow = 'auto';
-    mentorId = null;
-    form.reset();
-    document.querySelectorAll('[data-valmsg-for]').forEach(span => span.textContent = '');
-    globalErrorContainer.classList.add('hidden');
-    document.getElementById("modalTitle").innerText = "Create New Mentor";
-};
-
-// Global Click Handlers
-document.addEventListener("click", async (e) => {
+document.addEventListener("click", (e) => {
     const target = e.target;
 
-    // Open Create Modal
-    if (target.closest(".add-mentor-btn")) {
-        openModal();
-    }
+    if (target.closest(".add-mentor-btn")) return toggleModal(true);
+    if (target.closest(".modal-overlay") || target.closest(".cancel-btn")) return toggleModal(false);
 
-    // Close Modal
-    if (target.closest(".modal-overlay") || target.closest(".cancel-btn")) {
-        closeModal();
-    }
-
-    // Open Edit Modal
     const editBtn = target.closest(".edit-btn");
     if (editBtn) {
         mentorId = editBtn.dataset.id;
-        form.querySelector('[name="FullName"]').value = editBtn.dataset.fullname;
-        form.querySelector('[name="Email"]').value = editBtn.dataset.email;
-        form.querySelector('[name="UserName"]').value = editBtn.dataset.username;
-
+        form.FullName.value = editBtn.dataset.fullname;
+        form.Email.value = editBtn.dataset.email;
+        form.UserName.value = editBtn.dataset.username;
         document.getElementById("modalTitle").innerText = "Update Mentor";
-        openModal();
+        toggleModal(true);
     }
 });
 
-form.addEventListener('submit', async (e) => {
+form.addEventListener('submit', async e => {
     e.preventDefault();
 
-    const formData = new FormData(form);
-    const isEdit = !!mentorId;
+    const url = mentorId
+        ? `/Admin/Mentor/Update?id=${mentorId}`
+        : '/Admin/Mentor/Create';
 
-    let url = '/Admin/Mentor/Create';
-    if (isEdit) {
-        url = `/Admin/Mentor/Update?id=${mentorId}`;
-    }
+    const res = await fetch(url, {
+        method: mentorId ? 'PUT' : 'POST',
+        body: new FormData(form),
+        headers: { 'Accept': 'application/json' }
+    });
 
-    try {
-        const response = await fetch(url, {
-            method: isEdit ? 'PUT' : 'POST',
-            body: formData,
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
+    if (res.ok) return location.reload();
 
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.indexOf("application/json") !== -1) {
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                window.location.reload();
-            } else {
-                showValidationErrors(result.errors);
-            }
-        } else {
-            showValidationErrors({ "Error": ["Server returned an unexpected response format."] });
-        }
-    } catch (err) {
-        showValidationErrors({ "Error": ["A network error occurred. Please try again."] });
-    }
+    const data = await res.json();
+    showValidationErrors(data.errors);
 });
 
 function showValidationErrors(errors) {
-    document.querySelectorAll('[data-valmsg-for]').forEach(span => span.textContent = '');
-    globalErrorContainer.classList.add('hidden');
+    document.querySelectorAll('[data-valmsg-for]').forEach(x => x.textContent = '');
 
     if (!errors) return;
 
-    for (const key in errors) {
+    Object.entries(errors).forEach(([key, value]) => {
         const span = document.querySelector(`[data-valmsg-for="${key}"]`);
-        if (span) {
-            span.textContent = errors[key][0];
-
-            if (key === "Error") {
-                globalErrorContainer.classList.remove('hidden');
-            }
-        }
-    }
+        if (span) span.textContent = value[0];
+    });
 }
 
-// Escape key to close
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden'))
+        toggleModal(false);
 });
