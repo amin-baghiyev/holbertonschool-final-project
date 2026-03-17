@@ -28,28 +28,30 @@ public class AccountController : Controller
             if (User.IsInRole(UserRole.Student.ToString()))
                 return RedirectToAction("Index", "Dashboard", new { area = "Student" });
         }
-        
+
         return View();
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Index(UserLoginDTO dto, string? returnUrl = null)
+    public async Task<IActionResult> Index([FromBody] UserLoginDTO dto)
     {
         if (!ModelState.IsValid)
         {
-            return View(dto);
+            return ValidationProblem(ModelState);
         }
 
         var user = await _service.LoginAsync(dto);
-        
-        return user.Role switch
+
+        var redirectUrl = user.Role switch
         {
-            UserRole.Admin => RedirectToAction("Index", "Dashboard", new { area = "Admin" }),
-            UserRole.Mentor => RedirectToAction("Index", "Session", new { area = "Mentor" }),
-            UserRole.Student => RedirectToAction("Index", "Dashboard", new { area = "Student" }),
-            _ => RedirectToAction("Index", "Account")
+            UserRole.Admin => Url.Action("Index", "Dashboard", new { area = "Admin" }),
+            UserRole.Mentor => Url.Action("Index", "Session", new { area = "Mentor" }),
+            UserRole.Student => Url.Action("Index", "Dashboard", new { area = "Student" }),
+            _ => Url.Action("Index", "Account")
         };
+
+        return Ok(new { redirectUrl });
     }
 
     [HttpPost]

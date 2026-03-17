@@ -17,7 +17,7 @@
             <h2 style="background: url(https://intranet.hbtn.io/assets/holberton-logo-full-default-9c9d1742abc6ffb045e9b4af78ba85770bf39126bcf2c43af9d6a53ee4aabd3d.png) no-repeat center; background-size: contain; height: 80px; width: 80px"></h2>
         </div>
 
-        <form class="w-full space-y-4" method="POST">
+        <form class="w-full space-y-4" id="login" method="POST">
             @Html.AntiForgeryToken()
             <div>
                 <label asp-for="Email" class="block text-center text-sm font-semibold text-gray-700 mb-1">Email</label>
@@ -42,13 +42,7 @@
                 </button>
             </div>
         </form>
-
-        <div class="mt-10">
-            <a href="#" class="text-[#E30044] text-sm hover:underline">
-                Forgot your password?
-            </a>
-        </div>
-
     </div>
+    <script type="module" src="~/js/account.js"></script>
 </body>
 </html>
