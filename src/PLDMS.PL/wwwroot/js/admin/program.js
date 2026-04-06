@@ -66,3 +66,10 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && !modal.classList.contains('hidden'))
         toggleModal(false);
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (new URLSearchParams(window.location.search).get('action') === 'new') {
+        toggleModal(true);
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+});

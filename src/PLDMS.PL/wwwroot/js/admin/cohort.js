@@ -2,7 +2,7 @@ const modal = document.getElementById('addCohortModal');
 const studentModal = document.getElementById('addStudentModal');
 const form = document.getElementById("createCohortForm");
 let cohortId = null;
-let allStudents = [];
+let studentCache = {};
 let selectedStudentIds = new Set();
 
 const fetchExistingStudents = async (id) => {
@@ -12,11 +12,14 @@ const fetchExistingStudents = async (id) => {
 
         existingStudents.forEach(s => {
             selectedStudentIds.add(s.id.toString());
+            studentCache[s.id.toString()] = s;
         });
 
         document.getElementById('selectedCountText').textContent = `${selectedStudentIds.size} students selected`;
+        return existingStudents;
     } catch (err) {
         console.error("Failed to fetch existing students:", err);
+        return [];
     }
 };
 
@@ -26,14 +29,13 @@ const openStudentModal = async (id) => {
     document.body.style.overflow = 'hidden';
 
     selectedStudentIds.clear();
+    const searchInput = document.getElementById('searchStudentInput');
+    if(searchInput) searchInput.value = '';
 
-    await fetchExistingStudents(id);
+    document.getElementById('studentListContainer').innerHTML = `<div class="flex justify-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-red"></div></div>`;
 
-    if (allStudents.length === 0) {
-        await fetchStudents();
-    } else {
-        renderStudentList(allStudents);
-    }
+    const enrolledStudents = await fetchExistingStudents(id);
+    renderStudentList(enrolledStudents);
 };
 const closeStudentModal = () => {
     studentModal.classList.add('hidden');
@@ -42,16 +44,7 @@ const closeStudentModal = () => {
     selectedStudentIds.clear();
 };
 
-const fetchStudents = async () => {
-    const container = document.getElementById('studentListContainer');
-    try {
-        const res = await fetch('/Admin/Cohort/GetStudents');
-        allStudents = await res.json();
-        renderStudentList(allStudents);
-    } catch (err) {
-        container.innerHTML = `<div class="text-red-500 text-center py-4">Failed to load students.</div>`;
-    }
-};
+
 const renderStudentList = (students) => {
     const container = document.getElementById('studentListContainer');
 
@@ -77,6 +70,31 @@ const renderStudentList = (students) => {
 
     document.getElementById('selectedCountText').textContent = `${selectedStudentIds.size} students selected`;
 };
+
+let debounceTimer;
+document.getElementById('searchStudentInput')?.addEventListener('input', (e) => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+        const term = e.target.value.trim();
+        if (!term) {
+            const selectedStudents = Object.values(studentCache).filter(s => selectedStudentIds.has(s.id.toString()));
+            renderStudentList(selectedStudents);
+            return;
+        }
+
+        const container = document.getElementById('studentListContainer');
+        container.innerHTML = `<div class="flex justify-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-red"></div></div>`;
+        try {
+            const res = await fetch(`/Admin/Cohort/GetStudents?q=${encodeURIComponent(term)}`);
+            const students = await res.json();
+            
+            students.forEach(s => studentCache[s.id.toString()] = s);
+            renderStudentList(students);
+        } catch (err) {
+            container.innerHTML = `<div class="text-red-500 text-center py-4">Failed to search students.</div>`;
+        }
+    }, 300);
+});
 
 document.getElementById('studentListContainer').addEventListener('change', (e) => {
     if (e.target.classList.contains('student-checkbox')) {
@@ -229,4 +247,12 @@ function showValidationErrors(errors) {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
     if (e.key === 'Escape' && !studentModal.classList.contains('hidden')) closeStudentModal();
+});
+
+document.addEventListener("DOMContentLoaded", async () => {
+    if (new URLSearchParams(window.location.search).get('action') === 'new') {
+        await fetchPrograms();
+        openModal();
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
 });

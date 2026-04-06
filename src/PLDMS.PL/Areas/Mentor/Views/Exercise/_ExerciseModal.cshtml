@@ -22,7 +22,7 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Description</label>
-                                <textarea name="Description" rows="4" class="w-full mt-1 border rounded-lg p-2.5 focus:ring-brand-red outline-none"></textarea>
+                                <textarea id="exerciseDescriptionEditor" name="Description" rows="4" class="w-full mt-1 border rounded-lg p-2.5 focus:ring-brand-red outline-none"></textarea>
                                 <span data-valmsg-for="Description" class="text-red-500 text-xs mt-1"></span>
                             </div>
 
@@ -48,10 +48,16 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Supported Languages</label>
                                 <div class="flex flex-wrap gap-3">
-                                    <label class="flex items-center gap-1 text-sm"><input type="checkbox" name="Languages" value="103" class="accent-brand-red"> C</label>
-                                    <label class="flex items-center gap-1 text-sm"><input type="checkbox" name="Languages" value="102" class="accent-brand-red"> JavaScript</label>
-                                    <label class="flex items-center gap-1 text-sm"><input type="checkbox" name="Languages" value="91" class="accent-brand-red"> Java</label>
-                                    <label class="flex items-center gap-1 text-sm"><input type="checkbox" name="Languages" value="113" class="accent-brand-red"> Python</label>
+                                    @foreach (var lang in Enum.GetValues(typeof(ProgrammingLanguage)).Cast<ProgrammingLanguage>())
+                                    {
+                                        <label class="flex items-center gap-1 text-sm">
+                                            <input type="checkbox"
+                                                name="Languages"
+                                                value="@((int)lang)"
+                                                class="accent-brand-red" />
+                                            @lang
+                                        </label>
+                                    }
                                 </div>
                                 <span data-valmsg-for="Languages" class="text-red-500 text-xs mt-1"></span>
                             </div>
@@ -95,6 +101,12 @@
                 <label class="text-xs text-gray-500">Expected Output</label>
                 <textarea class="tc-output w-full border rounded p-1.5 text-sm font-mono outline-none focus:border-brand-red" rows="2"></textarea>
             </div>
+        </div>
+        <div class="mt-2">
+            <label class="flex items-center gap-2 text-xs font-medium text-gray-600">
+                <input type="checkbox" class="tc-is-example accent-brand-red size-3.5" />
+                Mark as Example (Visible to Students)
+            </label>
         </div>
     </div>
 </template>

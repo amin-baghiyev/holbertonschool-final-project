@@ -15,19 +15,22 @@ public class SessionController : Controller
     private readonly ISessionService _sessionService;
     private readonly ICohortService _cohortService;
     private readonly IExerciseService _exerciseService;
+    private readonly IProgramService _programService;
 
     public SessionController(
         ISessionService sessionService,
         ICohortService cohortService,
-        IExerciseService exerciseService)
+        IExerciseService exerciseService,
+        IProgramService programService)
     {
         _sessionService = sessionService;
         _cohortService = cohortService;
         _exerciseService = exerciseService;
+        _programService = programService;
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? q, DateTime? startDate, DateTime? endDate, SessionStatus? status, int page = 0, int pageSize = 10)
+    public async Task<IActionResult> Index(string? q, int? cohortId, int? programId, DateTime? startDate, DateTime? endDate, SessionStatus? status, int page = 0, int pageSize = 10)
     {
         pageSize = pageSize switch
         {
@@ -41,6 +44,8 @@ public class SessionController : Controller
 
         var (sessions, totalCount) = await _sessionService.SessionsAsTableItemAsync(
             q,
+            cohortId,
+            programId,
             startDate,
             endDate,
             status,
@@ -57,7 +62,9 @@ public class SessionController : Controller
             CurrentPage = page,
             PageSize = pageSize,
             Search = q,
-            Status = status
+            Status = status,
+            CohortId = cohortId,
+            ProgramId = programId
         };
 
         return View(viewModel);
@@ -74,6 +81,20 @@ public class SessionController : Controller
         catch (Exception ex)
         {
             return Json(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Detail(Guid id)
+    {
+        try
+        {
+            var session = await _sessionService.SessionByIdAsync(id);
+            return View(session);
+        }
+        catch (Exception)
+        {
+            return RedirectToAction(nameof(Index));
         }
     }
 
@@ -116,7 +137,51 @@ public class SessionController : Controller
         var cohorts = await _cohortService.CohortsAsOptionItemAsync();
         ViewBag.Cohorts = new SelectList(cohorts, nameof(CohortOptionItemDTO.Id), nameof(CohortOptionItemDTO.Name));
 
-        var exercises = await _exerciseService.ExercisesAsOptionItemAsync();
-        ViewBag.Exercises = new SelectList(exercises, nameof(ExerciseAsOptionDTO.Id), nameof(ExerciseAsOptionDTO.Name));
+        var programs = await _programService.ProgramsAsOptionItemAsync();
+        ViewBag.Programs = new SelectList(programs, nameof(ProgramOptionItemDTO.Id), nameof(ProgramOptionItemDTO.Name));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> SearchExercises(string? q, ExerciseDifficulty? difficulty, int? programId, ProgrammingLanguage? language)
+    {
+        var languagesParam = language.HasValue ? new[] { language.Value } : null;
+        var programsParam = programId.HasValue ? new[] { programId.Value } : null;
+
+        var (exercises, _) = await _exerciseService.ExercisesAsTableItemAsync(
+            q, programsParam, languagesParam, difficulty, onlyActive: true, page: 0, count: 50);
+
+        var result = exercises.Select(e => new
+        {
+            id = e.Id,
+            name = e.Name,
+            difficulty = e.Difficulty.ToString(),
+            programName = e.ProgramName,
+            languages = e.Languages.Select(l => l.ToString()).ToList()
+        });
+
+        return Json(result);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetExercisesBySessionId(Guid id)
+    {
+        try
+        {
+            var exercises = await _sessionService.GetExercisesBySessionIdAsync(id);
+            var result = exercises.Select(e => new
+            {
+                id = e.Id,
+                name = e.Name,
+                difficulty = e.Difficulty.ToString(),
+                programName = e.ProgramName,
+                languages = e.Languages.Select(l => l.ToString()).ToList()
+            });
+
+            return Json(result);
+        }
+        catch (Exception)
+        {
+            return Json(new object[] { });
+        }
     }
 }

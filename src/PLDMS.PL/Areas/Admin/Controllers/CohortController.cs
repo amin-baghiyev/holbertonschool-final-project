@@ -27,9 +27,9 @@ public class CohortController : Controller
     }
     
     [HttpGet]
-    public async Task<IActionResult> GetStudents()
+    public async Task<IActionResult> GetStudents(string? q)
     {
-        var students = await _cohortService.GetStudentSelectItemsAsync();
+        var students = await _cohortService.GetStudentSelectItemsAsync(q);
         return Json(students);
     }
     
@@ -50,7 +50,7 @@ public class CohortController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? q, int page, int pageSize = 10)
+    public async Task<IActionResult> Index(string? q, bool onlyActive = true, int page = 0, int pageSize = 10)
     {
         pageSize = pageSize switch
         {
@@ -61,7 +61,7 @@ public class CohortController : Controller
             _ => 10
         };
         
-        var (cohorts, totalCount) = await _cohortService.CohortsAsTableItemAsync(q ?? "", page, pageSize);
+        var (cohorts, totalCount) = await _cohortService.CohortsAsTableItemAsync(q ?? "", onlyActive, page, pageSize);
 
         var vm = new CohortVM
         {
@@ -102,16 +102,6 @@ public class CohortController : Controller
 
         await _cohortService.UpdateAsync(id, dto);
         await _cohortService.SaveChangesAsync();
-        return Ok();
-    }
-
-    [HttpDelete]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id)
-    {
-        await _cohortService.DeleteAsync(id);
-        await _cohortService.SaveChangesAsync();
-
         return Ok();
     }
 

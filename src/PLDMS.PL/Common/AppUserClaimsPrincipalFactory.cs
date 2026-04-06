@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using PLDMS.Core.Entities;
 using System.Security.Claims;
@@ -14,8 +14,7 @@ public class AppUserClaimsPrincipalFactory : UserClaimsPrincipalFactory<AppUser,
     {
         var identity = await base.GenerateClaimsAsync(user);
 
-        identity.AddClaim(
-            new Claim(ClaimTypes.Role, user.Role.ToString()));
+        identity.AddClaim(new Claim(ClaimTypes.Role, user.Role.ToString()));
 
         return identity;
     }

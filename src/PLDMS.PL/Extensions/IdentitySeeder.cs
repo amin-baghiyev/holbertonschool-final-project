@@ -39,7 +39,7 @@ public class IdentitySeeder
             FullName = fullName,
             Role = role,
             EmailConfirmed = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow.AddHours(4)
         };
 
         await userManager.CreateAsync(user, password);

@@ -18,7 +18,7 @@ public class StudentController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? q, int page, int pageSize = 10)
+    public async Task<IActionResult> Index(string? q, bool onlyActive = true, int page = 0, int pageSize = 10)
     {
         pageSize = pageSize switch
         {
@@ -29,7 +29,7 @@ public class StudentController : Controller
             _ => 10
         };
 
-        var (students, totalCount) = await _studentService.StudentsAsTableItemAsync(q ?? "", page, pageSize);
+        var (students, totalCount) = await _studentService.StudentsAsTableItemAsync(q ?? "", onlyActive, page, pageSize);
 
         var vm = new StudentVM
         {
@@ -53,7 +53,6 @@ public class StudentController : Controller
         }
 
         await _studentService.CreateAsync(dto);
-        await _studentService.SaveChangesAsync();
 
         return Ok();
     }
@@ -69,17 +68,24 @@ public class StudentController : Controller
         }
 
         await _studentService.UpdateAsync(id, dto);
-        await _studentService.SaveChangesAsync();
 
         return Ok();
     }
 
-    [HttpDelete]
+    [HttpPatch]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Deactivate(Guid id)
     {
-        await _studentService.DeleteAsync(id);
-        await _studentService.SaveChangesAsync();
+        await _studentService.SoftDeleteAsync(id);
+
+        return Ok();
+    }
+
+    [HttpPatch]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Activate(Guid id)
+    {
+        await _studentService.RecoverAsync(id);
 
         return Ok();
     }

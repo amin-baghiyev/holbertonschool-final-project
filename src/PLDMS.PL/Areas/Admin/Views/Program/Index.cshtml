@@ -1,4 +1,4 @@
-﻿@model ICollection<ProgramItemDTO>
+@model ICollection<ProgramItemDTO>
 
 @{
     var hasSearch = !string.IsNullOrWhiteSpace(Context.Request.Query["q"]);
@@ -21,21 +21,33 @@
         </div>
 
         <div class="flex gap-3">
-            <form asp-action="Index" method="get" class="flex gap-3">
-                <div class="flex items-center bg-white border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-brand-red/20 transition-all">
-                    <i class="ph ph-magnifying-glass text-gray-400 mr-2"></i>
-                    <input type="text" name="q" value="@Context.Request.Query["q"]"
-                           placeholder="Search by name..."
-                           class="outline-none text-sm w-40 md:w-64 bg-transparent">
-                    @if (!string.IsNullOrEmpty(Context.Request.Query["q"]))
-                    {
-                        <a asp-action="Index" class="ml-2 text-gray-400 hover:text-brand-red">
-                            <i class="ph ph-x-circle"></i>
-                        </a>
-                    }
+            <form asp-action="Index" method="get" class="flex flex-wrap gap-4 items-end">
+                <div class="flex flex-col">
+                    <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Status</label>
+                    <select name="onlyActive" class="bg-white border rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand-red/20 transition-all min-w-[140px]">
+                        <option value="true" selected="@(Context.Request.Query["onlyActive"] == "true" || string.IsNullOrEmpty(Context.Request.Query["onlyActive"]))">Active Only</option>
+                        <option value="false" selected="@(Context.Request.Query["onlyActive"] == "false")">Include Deactives</option>
+                    </select>
                 </div>
-                    <button type="submit" class="bg-brand-red hover:bg-red-700 py-2.5 px-5 rounded-lg transition-all shadow-sm">
-                        <i class="ph ph-magnifying-glass text-white font-large"></i>
+
+                <div class="flex flex-col">
+                    <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Search</label>
+                    <div class="flex items-center bg-white border rounded-lg px-3 py-2.5 focus-within:ring-2 focus-within:ring-brand-red/20 transition-all">
+                        <i class="ph ph-magnifying-glass text-gray-400 mr-2"></i>
+                        <input type="text" name="q" value="@Context.Request.Query["q"]"
+                               placeholder="Search by name..."
+                               class="outline-none text-sm w-40 md:w-64 bg-transparent">
+                        @if (!string.IsNullOrEmpty(Context.Request.Query["q"]))
+                        {
+                            <a asp-action="Index" class="ml-2 text-gray-400 hover:text-brand-red">
+                                <i class="ph ph-x-circle"></i>
+                            </a>
+                        }
+                    </div>
+                </div>
+                
+                <button type="submit" class="bg-brand-red hover:bg-red-700 py-2.5 px-5 rounded-lg transition-all shadow-sm">
+                    <i class="ph ph-magnifying-glass text-white font-large"></i>
                 </button>
             </form>
         </div>
@@ -67,14 +79,6 @@
                                 data-name="@item.Name"
                                 data-duration="@item.Duration">
                                 <i class="ph ph-pencil-simple text-lg"></i>
-                            </button>
-                            
-                            <button
-                                data-url="@Url.Action("Delete", "Program", new { id = item.Id })"
-                                data-type="Delete"
-                                data-name="@item.Name"
-                                class="trash-btn text-gray-400 hover:text-brand-red">
-                                <i class="ph ph-trash text-lg"></i>
                             </button>
                             
                             <button 

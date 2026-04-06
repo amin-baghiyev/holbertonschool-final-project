@@ -29,18 +29,20 @@ public class SessionService : ISessionService
     }
 
     public async Task<(ICollection<SessionTableItemDTO>, int TotalCount)> SessionsAsTableItemAsync(
-        string? q = null, DateTime? startDate = null, DateTime? endDate = null, SessionStatus? status = null, int page = 0, int count = 25)
+        string? q = null, int? cohortId = null, int? programId = null, DateTime? startDate = null, DateTime? endDate = null, SessionStatus? status = null, int page = 0, int count = 25)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTime.UtcNow.AddHours(4);
 
         Expression<Func<Session, bool>> predicate = s =>
-            (string.IsNullOrWhiteSpace(q) || s.Name.Contains(q)) &&
-            s.StartDate >= startDate &&
-            s.EndDate <= endDate &&
-            (
-                status == SessionStatus.Upcoming ? s.StartDate > now :
-                status == SessionStatus.Finished ? s.EndDate < now :
-                (s.StartDate <= now && s.EndDate >= now)
+            (string.IsNullOrWhiteSpace(q) || s.Name.ToLower().Contains(q.ToLower())) &&
+            (cohortId == null || s.CohortId == cohortId) &&
+            (programId == null || s.Cohort.ProgramId == programId) &&
+            (startDate == null || s.StartDate >= startDate) &&
+            (endDate == null || s.EndDate <= endDate) &&
+            (status == null ||
+                (status == SessionStatus.Upcoming && s.StartDate > now) ||
+                (status == SessionStatus.Finished && s.EndDate < now) ||
+                (status == SessionStatus.Active && s.StartDate <= now && s.EndDate >= now)
             );
 
         var (sessions, totalCount) = await _sessionRepository.GetAllAsync(
@@ -62,7 +64,7 @@ public class SessionService : ISessionService
             predicate: s => s.Id == id,
             includes: query => query
                 .Include(s => s.Cohort).ThenInclude(c => c.Program!)
-                .Include(s => s.Groups).ThenInclude(g => g.Students)
+                .Include(s => s.Groups).ThenInclude(g => g.Students).ThenInclude(sg => sg.Student)
                 .Include(s => s.Exercises).ThenInclude(se => se.Exercise).ThenInclude(e => e.ExerciseLanguages),
             isTracking: false
         );
@@ -128,7 +130,7 @@ public class SessionService : ISessionService
 
         var session = _mapper.Map<Session>(dto);
         session.Id = Guid.CreateVersion7();
-        session.CreatedAt = DateTime.UtcNow;
+        session.CreatedAt = DateTime.UtcNow.AddHours(4);
 
         session.Name = string.IsNullOrWhiteSpace(dto.Name)
             ? $"Session-{Guid.NewGuid().ToString()[..8]}"
@@ -187,7 +189,10 @@ public class SessionService : ISessionService
         if (hasOverlap)
             throw new BaseException("A session for this cohort already exists during this time period");
 
-        bool hasStarted = session.StartDate <= DateTime.UtcNow;
+        bool hasStarted = session.StartDate <= DateTime.UtcNow.AddHours(4);
+
+        if (hasStarted)
+            throw new BaseException("Cannot edit the session because it has already started or finished");
 
         bool cohortChanged = session.CohortId != dto.CohortId;
         bool groupSizeChanged = session.StudentCountPerGroup != dto.StudentCountPerGroup;
@@ -274,7 +279,6 @@ public class SessionService : ISessionService
             }
         }
 
-        session.Name = string.IsNullOrWhiteSpace(dto.Name) ? session.Name : dto.Name;
         session.StartDate = dto.StartDate;
         session.EndDate = dto.EndDate;
 
@@ -289,7 +293,7 @@ public class SessionService : ISessionService
         if (session == null)
             throw new BaseException($"Session with ID {id} was not found");
 
-        if (session.StartDate <= DateTime.UtcNow)
+        if (session.StartDate <= DateTime.UtcNow.AddHours(4))
             throw new BaseException("Cannot delete the session because it has already started");
 
         var repoName = new Uri(session.RepositoryUrl).Segments.Last();
@@ -297,5 +301,26 @@ public class SessionService : ISessionService
 
         _sessionRepository.Delete(session);
         await _sessionRepository.SaveChangesAsync();
+    }
+
+    public async Task<ICollection<ExerciseTableItemDTO>> GetExercisesBySessionIdAsync(Guid id)
+    {
+        var session = await _sessionRepository.GetOneAsync(
+            predicate: s => s.Id == id,
+            includes: query => query
+                .Include(s => s.Exercises)
+                    .ThenInclude(se => se.Exercise)
+                        .ThenInclude(e => e.Program)
+                .Include(s => s.Exercises)
+                    .ThenInclude(se => se.Exercise)
+                        .ThenInclude(e => e.ExerciseLanguages),
+            isTracking: false
+        );
+
+        if (session == null)
+            throw new BaseException($"Session with ID {id} was not found");
+
+        var exercises = session.Exercises.Select(se => se.Exercise);
+        return _mapper.Map<ICollection<ExerciseTableItemDTO>>(exercises.ToList());
     }
 }

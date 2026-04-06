@@ -5,7 +5,6 @@ namespace PLDMS.BL.DTOs.MentorDTOs;
 public record MentorFormDTO
 {
     public string Email { get; set; }
-    public string UserName { get; set; }
     public string FullName { get; set; }
 }
 
@@ -21,10 +20,5 @@ public class MentorFormValidator : AbstractValidator<MentorFormDTO>
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required.")
             .EmailAddress().WithMessage("Please enter a valid email address.");
-
-        RuleFor(x => x.UserName)
-            .NotEmpty().WithMessage("Username is required.")
-            .MinimumLength(5).WithMessage("Username must be at least 5 characters.")
-            .Matches(@"^[a-zA-Z0-9._]+$").WithMessage("Username can only contain letters, numbers, dots, and underscores.");
     }
 }

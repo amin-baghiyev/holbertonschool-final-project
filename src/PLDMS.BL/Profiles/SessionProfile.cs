@@ -1,4 +1,4 @@
-﻿using PLDMS.BL.DTOs;
+using PLDMS.BL.DTOs;
 using PLDMS.Core.Entities;
 using PLDMS.Core.Enums;
 using AutoMapper;
@@ -11,6 +11,9 @@ public class SessionProfile : Profile
     {
         CreateMap<SessionFormDTO, Session>()
             .ForMember(dest => dest.Exercises, opt => opt.Ignore());
+
+        CreateMap<Session, SessionFormDTO>()
+            .ForMember(dest => dest.ExercisesIds, opt => opt.Ignore());
 
         CreateMap<Session, SessionTableItemDTO>()
             .ForMember(dest => dest.CohortName, opt => opt.MapFrom(src => src.Cohort != null ? src.Cohort.Name : string.Empty))
@@ -34,7 +37,7 @@ public class SessionProfile : Profile
 
     private static SessionStatus GetSessionStatus(DateTime startDate, DateTime endDate)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTime.UtcNow.AddHours(4);
         if (startDate > now) return SessionStatus.Upcoming;
         if (endDate < now) return SessionStatus.Finished;
         return SessionStatus.Active;

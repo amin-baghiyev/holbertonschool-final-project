@@ -7,7 +7,6 @@ using PLDMS.BL.Services.Abstractions;
 using PLDMS.BL.Services.Concretes;
 using PLDMS.BL.Utilities;
 using System.Reflection;
-using PLDMS.BL.Utilities;
 
 namespace PLDMS.BL;
 
@@ -21,19 +20,32 @@ public static class ConfigurationServices
         services.AddFluentValidationAutoValidation();
         services.AddFluentValidationClientsideAdapters();
 
-        services.AddSingleton(new GitHubClient(new ProductHeaderValue("HolbertonPLDSessions"))
+        services.AddSingleton(sp =>
         {
-            Credentials = new Credentials(configuration["GitHub:Token"])
+            var client = new GitHubClient(new ProductHeaderValue("HolbertonPLDSessions"))
+            {
+                Credentials = new Credentials(configuration["GitHub:Token"])
+            };
+
+            return client;
         });
         services.AddScoped<GitHubService>();
+
+        services.AddHttpClient<IJudgeService, JudgeService>(client =>
+        {
+            client.BaseAddress = new Uri("http://localhost:2358");
+        });
 
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IProgramService, ProgramService>();
         services.AddScoped<ICohortService, CohortService>();
         services.AddScoped<IExerciseService, ExerciseService>();
         services.AddScoped<ISessionService, SessionService>();
+        services.AddScoped<ISubmissionService, SubmissionService>();
         services.AddScoped<IMentorService, MentorService>();
         services.AddScoped<IStudentService, StudentService>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<IReviewService, ReviewService>();
     }
 }

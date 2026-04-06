@@ -1,0 +1,162 @@
+@using PLDMS.BL.DTOs
+@model SessionDetailDTO
+
+@{
+    ViewData["Title"] = Model.Name + " - Session Details";
+    var statusColor = Model.SessionStatus switch
+    {
+        PLDMS.Core.Enums.SessionStatus.Upcoming => "bg-yellow-100 text-yellow-700 border-yellow-200",
+        PLDMS.Core.Enums.SessionStatus.Active => "bg-green-100 text-green-700 border-green-200",
+        PLDMS.Core.Enums.SessionStatus.Finished => "bg-gray-100 text-gray-700 border-gray-200",
+        _ => "bg-gray-100 text-gray-700 border-gray-200"
+    };
+}
+
+<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0">
+    <div class="flex items-center gap-4">
+        <a asp-action="Index" class="text-gray-400 hover:text-brand-red transition-colors flex items-center gap-2">
+            <i class="ph ph-arrow-left text-lg pb-0.5"></i>
+            <span class="text-sm font-medium">Back</span>
+        </a>
+        <div class="h-6 w-px bg-gray-200"></div>
+        <h1 class="text-xl font-bold text-gray-800">@Model.Name</h1>
+        <span class="px-2.5 py-1 pt-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border @statusColor">
+            @Model.SessionStatus
+        </span>
+    </div>
+</header>
+
+<div class="flex-1 flex flex-col overflow-y-auto p-8 bg-gray-50/50">
+    <div class="max-w-6xl mx-auto w-full space-y-8">
+    
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <i class="ph ph-stack text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Cohort / Program</p>
+                    <p class="text-gray-900 font-bold truncate max-w-32" title="@Model.CohortName">@Model.CohortName</p>
+                    <p class="text-xs text-gray-400 truncate max-w-32" title="@Model.ProgramName">@Model.ProgramName</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                    <i class="ph ph-calendar-blank text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Schedule</p>
+                    <p class="text-gray-900 font-bold">@Model.StartDate.ToString("MMM dd, yyyy")</p>
+                    <p class="text-xs text-gray-400">@Model.StartDate.ToString("HH:mm") to @Model.EndDate.ToString("HH:mm")</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center shrink-0">
+                    <i class="ph ph-users-three text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Students</p>
+                    <p class="text-gray-900 font-bold">@Model.TotalStudentCount</p>
+                    <p class="text-xs text-gray-400">@Model.StudentCountPerGroup per group</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                    <i class="ph ph-github-logo text-2xl"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-sm text-gray-500 font-medium">Repository</p>
+                    <a href="@Model.RepositoryUrl" target="_blank" class="text-gray-900 font-bold truncate block hover:text-brand-red transition-colors">View Repo <i class="ph ph-arrow-up-right text-xs"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="border-b border-gray-100 bg-gray-50 px-6 py-4">
+                        <h2 class="text-lg font-bold text-gray-800">Assigned Tasks (@Model.Exercises.Count)</h2>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        @if (!Model.Exercises.Any())
+                        {
+                            <div class="p-8 text-center text-gray-500">
+                                <i class="ph ph-code text-3xl mb-2 text-gray-300"></i>
+                                <p>No tasks assigned.</p>
+                            </div>
+                        }
+                        @foreach (var ex in Model.Exercises)
+                        {
+                            var diffColor = ex.Difficulty.ToString() == "Easy" ? "text-green-600 bg-green-50" :
+                                            ex.Difficulty.ToString() == "Medium" ? "text-yellow-600 bg-yellow-50" : 
+                                            "text-red-600 bg-red-50";
+
+                            <div class="p-5 hover:bg-gray-50 transition-colors">
+                                <div class="flex justify-between items-start mb-2">
+                                    <a href="/Mentor/Exercise?action=edit&id=@ex.Id" class="font-semibold text-gray-800 hover:text-brand-red transition-colors decoration-dashed hover:underline" title="Edit Task">@ex.Name</a>
+                                    <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded @diffColor">@ex.Difficulty</span>
+                                </div>
+                                <div class="flex gap-1 flex-wrap">
+                                    @foreach(var lang in ex.Languages)
+                                    {
+                                        <span class="text-[10px] uppercase font-bold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">@lang</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="border-b border-gray-100 bg-gray-50 px-6 py-4 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-gray-800">Student Groups (@Model.Groups.Count)</h2>
+                        <span class="text-sm font-medium text-gray-500">Auto-generated</span>
+                    </div>
+
+                    <div class="p-6">
+                        @if (!Model.Groups.Any())
+                        {
+                            <div class="py-12 text-center border-2 border-dashed border-gray-200 rounded-xl">
+                                <i class="ph ph-users-three text-4xl mb-3 text-gray-300"></i>
+                                <p class="text-gray-500 font-medium">No groups were generated.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                                @foreach (var group in Model.Groups.OrderBy(x=>x.Name))
+                                {
+                                    <div class="border border-gray-200 rounded-xl overflow-hidden hover:border-gray-300 transition-colors shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+                                        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+                                            <div class="flex items-center gap-2 text-gray-800 font-bold">
+                                                <i class="ph ph-users text-brand-red"></i> @group.Name
+                                            </div>
+                                            <span class="bg-brand-red/10 text-brand-red text-xs px-2 py-0.5 rounded-full font-semibold">@group.Students.Count Members</span>
+                                        </div>
+                                        <ul class="divide-y divide-gray-100 h-full bg-white">
+                                            @foreach (var student in group.Students)
+                                            {
+                                                <li class="px-4 py-3 text-sm text-gray-700 flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                                                    <div class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0">
+                                                        @student.FullName.Substring(0, 1).ToUpper()
+                                                    </div>
+                                                    <span class="truncate font-medium">@student.FullName</span>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

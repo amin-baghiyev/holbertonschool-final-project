@@ -18,7 +18,7 @@ public class MentorController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? q, int page, int pageSize = 10)
+    public async Task<IActionResult> Index(string? q, bool onlyActive = true, int page = 0, int pageSize = 10)
     {
         pageSize = pageSize switch
         {
@@ -29,7 +29,7 @@ public class MentorController : Controller
             _ => 10
         };
 
-        var (mentors, totalCount) = await _mentorService.MentorsAsTableItemAsync(q ?? "", page, pageSize);
+        var (mentors, totalCount) = await _mentorService.MentorsAsTableItemAsync(q ?? "", onlyActive, page, pageSize);
 
         var vm = new MentorVM
         {
@@ -73,11 +73,21 @@ public class MentorController : Controller
         return Ok();
     }
 
-    [HttpDelete]
+    [HttpPatch]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Deactivate(Guid id)
     {
-        await _mentorService.DeleteAsync(id);
+        await _mentorService.SoftDeleteAsync(id);
+        await _mentorService.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    [HttpPatch]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Activate(Guid id)
+    {
+        await _mentorService.RecoverAsync(id);
         await _mentorService.SaveChangesAsync();
 
         return Ok();

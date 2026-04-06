@@ -1,4 +1,4 @@
-﻿using PLDMS.BL.DTOs;
+using PLDMS.BL.DTOs;
 using PLDMS.Core.Enums;
 
 namespace PLDMS.BL.Services.Abstractions;
@@ -9,6 +9,7 @@ public interface IExerciseService
     Task<ICollection<ExerciseAsOptionDTO>> ExercisesAsOptionItemAsync(string? q = null, int count = 25);
     Task<ExerciseDetailDTO> ExerciseByIdAsync(long id);
     Task<ExerciseFormDTO> ExerciseByIdForEditAsync(long id);
+    Task<ExerciseFormDTO> ExerciseByIdForStudentAsync(long id);
     Task CreateAsync(ExerciseFormDTO dto);
     Task UpdateAsync(long id, ExerciseFormDTO dto);
     Task SoftDeleteAsync(long id);

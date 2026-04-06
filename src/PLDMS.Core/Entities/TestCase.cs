@@ -6,6 +6,7 @@ public class TestCase : BaseEntity<long>
 {
     public string Input { get; set; } = null!;
     public string Output { get; set; } = null!;
+    public bool IsExample { get; set; }
     public bool IsDeleted { get; set; }
 
     public long ExerciseId { get; set; }

@@ -74,6 +74,13 @@ public class ExerciseController : Controller
         return Json(exercise);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetTestCases(long id)
+    {
+        var exercise = await _exerciseService.ExerciseByIdForEditAsync(id);
+        return Json(exercise.TestCases);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([FromBody] ExerciseFormDTO dto)

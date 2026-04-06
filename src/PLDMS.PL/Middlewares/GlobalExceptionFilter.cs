@@ -18,22 +18,22 @@ public class GlobalExceptionFilter : IExceptionFilter
     public void OnException(ExceptionContext context)
     {
         string errorMessage = context.Exception is BaseException ex
-            ? ex.Message
-            : "Something went wrong";
+           ? ex.Message
+           : "Something went wrong";
 
         context.Result = new JsonResult(new
         {
-            errors = new
-            {
-                Error = new[] { errorMessage }
-            }
+           errors = new
+           {
+               Error = new[] { errorMessage }
+           }
         },
         new System.Text.Json.JsonSerializerOptions
         {
-            PropertyNamingPolicy = null
+           PropertyNamingPolicy = null
         })
         {
-            StatusCode = 400
+           StatusCode = 400
         };
 
         context.ExceptionHandled = true;

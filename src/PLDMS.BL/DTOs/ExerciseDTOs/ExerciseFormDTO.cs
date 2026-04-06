@@ -1,10 +1,11 @@
-﻿using FluentValidation;
+using FluentValidation;
 using PLDMS.Core.Enums;
 
 namespace PLDMS.BL.DTOs;
 
 public record ExerciseFormDTO
 {
+    public long Id { get; set; }
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
     public ExerciseDifficulty Difficulty { get; set; }

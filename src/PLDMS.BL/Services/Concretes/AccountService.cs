@@ -20,6 +20,7 @@ public class AccountService : IAccountService
     public async Task<AppUser> LoginAsync(UserLoginDTO dto)
     {
         AppUser user = await _userManager.FindByEmailAsync(dto.Email) ?? throw new BaseException("Credentials are wrong");
+        if (user.IsDeleted) throw new BaseException("Credentials are wrong");
 
         SignInResult res = await _signInManager.PasswordSignInAsync(user, dto.Password, false, true);
 

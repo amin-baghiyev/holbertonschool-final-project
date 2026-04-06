@@ -509,8 +509,8 @@ namespace PLDMS.DL.Migrations
 
                     b.Property<string>("CommitHash")
                         .IsRequired()
-                        .HasMaxLength(12)
-                        .HasColumnType("character varying(12)");
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -556,6 +556,9 @@ namespace PLDMS.DL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
+
+                    b.Property<bool>("IsExample")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Output")
                         .IsRequired()

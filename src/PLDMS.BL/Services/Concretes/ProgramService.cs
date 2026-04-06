@@ -20,11 +20,12 @@ public class ProgramService : IProgramService
         _mapper = mapper;
     }
     
-    public async Task<ICollection<ProgramItemDTO>> ProgramsAsItemAsync(string q)
+    public async Task<ICollection<ProgramItemDTO>> ProgramsAsItemAsync(string q, bool onlyActive = true)
     {
         var (programs, totalCount) = await _programRepository.GetAllAsync(p =>
-            string.IsNullOrWhiteSpace(q) ||
-            EF.Functions.ILike(p.Name, $"%{q}%"));
+            (!onlyActive || !p.IsDeleted) &&
+            (string.IsNullOrWhiteSpace(q) ||
+            EF.Functions.ILike(p.Name, $"%{q}%")));
         
         return _mapper.Map<ICollection<ProgramItemDTO>>(programs);
     }
@@ -67,18 +68,6 @@ public class ProgramService : IProgramService
         program.Duration = dto.Duration;
         
         _programRepository.Update(program);
-    }
-
-    public async Task DeleteAsync(int id)
-    {
-        var program = await _programRepository.GetOneAsync(p => p.Id == id);
-
-        if (program == null)
-        {
-            throw new BaseException("Program not found");
-        }
-        
-        _programRepository.Delete(program);
     }
 
     public async Task SoftDeleteAsync(int id)

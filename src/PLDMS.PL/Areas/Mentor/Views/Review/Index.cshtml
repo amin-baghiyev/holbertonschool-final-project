@@ -1,77 +1,462 @@
-<div class="p-8">
-    <div class="mb-6">
-        <h2 class="text-2xl font-bold mb-2">Submission Reviews</h2>
-        <p class="text-sm text-gray-500">Only finished sessions are eligible for review.</p>
-    </div>
+@model ICollection<PLDMS.BL.DTOs.MentorReviewListItemDTO>
+@using PLDMS.BL.DTOs
+@using PLDMS.Core.Enums
 
-    <div class="bg-white rounded-xl border border-gray-200">
-        <div class="p-4 border-b flex justify-between items-center">
-            <div class="flex gap-2">
-                <button class="px-3 py-1 bg-brand-dark text-white rounded-full text-xs">All</button>
-                <button class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">Pending</button>
-                <button class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">Under Review</button>
+@{
+    ViewData["Title"] = "Review Management";
+    var summary = ViewBag.Summary as ReviewSummaryDTO;
+    var currentStatus = ViewBag.Status as ReviewStatus?;
+    var searchTerm = ViewBag.Search as string;
+    var currentPage = (int)ViewBag.CurrentPage;
+    var totalCount = (int)ViewBag.TotalCount;
+    var pageSize = (int)ViewBag.PageSize;
+    var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+    var startItem = totalCount == 0 ? 0 : currentPage * pageSize + 1;
+    var endItem = Math.Min((currentPage + 1) * pageSize, totalCount);
+
+    var hasSearch = !string.IsNullOrWhiteSpace(searchTerm) || currentStatus.HasValue;
+}
+
+<div class="flex-1 flex flex-col overflow-hidden bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-8 py-6 shrink-0">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Review Management</h1>
+                <p class="text-sm text-gray-500 mt-1 font-medium">Monitor and manage peer reviews and advisor assessments across all cohorts.</p>
             </div>
+            <a asp-action="AssignableGroups" class="inline-flex items-center gap-2 bg-brand-red text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition-all shadow-lg shadow-red-100 group">
+                <i class="ph ph-plus-circle text-xl group-hover:rotate-90 transition-transform duration-300"></i>
+                Assign New Review
+            </a>
         </div>
 
-        <div class="divide-y">
-            <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <a href="@Url.Action("Index", new { status = (ReviewStatus?)null, q = searchTerm })" 
+               class="bg-white p-6 rounded-2xl border transition-all hover:shadow-md group @(!currentStatus.HasValue ? "border-brand-dark ring-4 ring-gray-100" : "border-gray-100 hover:border-brand-dark/30")">
                 <div class="flex items-center gap-4">
-                    <div
-                        class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
-                        G1
+                    <div class="w-12 h-12 @(!currentStatus.HasValue ? "bg-brand-dark text-white" : "bg-gray-50 text-brand-dark") rounded-xl shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="ph ph-list-numbers text-2xl"></i>
                     </div>
                     <div>
-                        <h4 class="font-bold text-sm">Group: Cyber-Warriors</h4>
-                        <p class="text-xs text-gray-500">Task: System Architecture Design • Cohort 19</p>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-brand-dark transition-colors">Total Reviews</p>
+                        <p class="text-2xl font-black text-gray-900">@summary?.TotalReviews</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="@Url.Action("Index", new { status = ReviewStatus.Pending, q = searchTerm })"
+               class="bg-white p-6 rounded-2xl border transition-all hover:shadow-md group @(currentStatus == ReviewStatus.Pending ? "border-yellow-500 ring-4 ring-yellow-50" : "border-gray-100 hover:border-yellow-500/30")">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 @(currentStatus == ReviewStatus.Pending ? "bg-yellow-500 text-white" : "bg-yellow-50 text-yellow-500") rounded-xl shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="ph ph-clock text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-yellow-600 transition-colors">Pending</p>
+                        <p class="text-2xl font-black text-gray-900">@summary?.PendingReviews</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="@Url.Action("Index", new { status = ReviewStatus.Reviewed, q = searchTerm })"
+               class="bg-white p-6 rounded-2xl border transition-all hover:shadow-md group @(currentStatus == ReviewStatus.Reviewed ? "border-green-500 ring-4 ring-green-50" : "border-gray-100 hover:border-green-500/30")">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 @(currentStatus == ReviewStatus.Reviewed ? "bg-green-500 text-white" : "bg-green-50 text-green-500") rounded-xl shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="ph ph-check-square text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-green-600 transition-colors">Completed</p>
+                        <p class="text-2xl font-black text-gray-900">@summary?.CompletedReviews</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="@Url.Action("AssignableGroups")"
+               class="bg-white p-6 rounded-2xl border border-gray-100 transition-all hover:shadow-md hover:border-brand-red/30 group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-red-50 text-brand-red rounded-xl shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="ph ph-warning-circle text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-brand-red transition-colors">Unassigned Groups</p>
+                        <p class="text-2xl font-black text-gray-900">@summary?.GroupsNeedingReview</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Filters & Search -->
+        <div class="flex flex-col md:flex-row items-end gap-4">
+            <form asp-action="Index" method="get" id="searchForm" class="flex flex-1 flex-wrap gap-4 items-end">
+                <input type="hidden" name="page" value="0" />
+                <input type="hidden" name="pageSize" value="@pageSize" />
+                
+                <div class="flex flex-col">
+                    <label class="text-xs font-bold text-gray-400 mb-1 uppercase tracking-widest">Filter Status</label>
+                    <select name="status" onchange="this.form.submit()" class="bg-gray-50 border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium outline-none focus:ring-4 focus:ring-brand-red/10 focus:border-brand-red transition-all min-w-[180px]">
+                        <option value="">All Statuses</option>
+                        <option value="Pending" selected="@(currentStatus == ReviewStatus.Pending)">Pending</option>
+                        <option value="Reviewed" selected="@(currentStatus == ReviewStatus.Reviewed)">Reviewed</option>
+                        <option value="Accepted" selected="@(currentStatus == ReviewStatus.Accepted)">Accepted</option>
+                        <option value="Rejected" selected="@(currentStatus == ReviewStatus.Rejected)">Rejected</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col flex-1">
+                    <label class="text-xs font-bold text-gray-400 mb-1 uppercase tracking-widest">Quick Search</label>
+                    <div class="relative group">
+                        <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-red transition-colors"></i>
+                        <input type="text" name="q" value="@searchTerm" id="mainSearchInput" 
+                               placeholder="Search group, session, or reviewer..." 
+                               class="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-4 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-all">
+                        @if (hasSearch)
+                        {
+                            <a asp-action="Index" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-red">
+                                <i class="ph ph-x-circle text-lg"></i>
+                            </a>
+                        }
                     </div>
                 </div>
 
-                <div class="flex items-center gap-6">
-                    <div class="text-center">
-                        <p class="text-xs text-gray-400 uppercase font-bold">Auto-Score</p>
-                        <p class="text-sm font-bold text-green-600">8/10 Tests</p>
-                    </div>
+                <button type="submit" class="bg-brand-red hover:bg-red-700 text-white p-3 rounded-xl transition-all shadow-lg shadow-red-100">
+                    <i class="ph ph-magnifying-glass text-lg"></i>
+                </button>
+            </form>
+        </div>
+    </header>
 
-                    <div class="flex gap-2">
-                        <button class="px-3 py-1.5 border rounded-lg text-xs font-bold hover:bg-gray-50">
-                            Assign Peer Reviewer
-                        </button>
-                        <button
-                            class="px-3 py-1.5 bg-brand-red text-white rounded-lg text-xs font-bold hover:bg-red-700">
-                            Review Personally
-                        </button>
-                    </div>
-                </div>
+    <!-- Main Content Area -->
+    <div class="flex-1 p-8 overflow-y-auto">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="mb-8 flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-2xl animate-fade-in shadow-sm">
+                <i class="ph ph-check-circle text-2xl font-bold"></i>
+                <span class="font-bold">@TempData["SuccessMessage"]</span>
             </div>
-            <div class="p-4 flex items-center justify-between hover:bg-gray-50">
-                <div class="flex items-center gap-4">
-                    <div
-                        class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
-                        G1
+        }
+
+        <div class="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-50/50 border-b border-gray-100">
+                            <th class="px-8 py-5">Group & Session</th>
+                            <th class="px-8 py-5">Reviewer</th>
+                            <th class="px-8 py-5 text-center">Performance</th>
+                            <th class="px-8 py-5">Status</th>
+                            <th class="px-8 py-5 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50 text-sm font-medium">
+                        @foreach (var r in Model)
+                        {
+                            <tr class="hover:bg-gray-50/50 transition-colors group">
+                                <td class="px-8 py-6">
+                                    <div class="font-bold text-gray-900 text-lg">@r.GroupName</div>
+                                    <div class="flex items-center gap-1.5 text-gray-400 text-xs mt-1">
+                                        <i class="ph ph-calendar-blank"></i>
+                                        @r.CreatedAt.ToString("MMM dd, yyyy")
+                                        <span class="mx-1">•</span>
+                                        <i class="ph ph-chalkboard"></i>
+                                        @r.SessionName
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-brand-dark/5 flex items-center justify-center text-brand-dark font-black border border-brand-dark/10 group-hover:bg-brand-dark group-hover:text-white transition-all">
+                                            @((!string.IsNullOrEmpty(r.ReviewerFullName) ? r.ReviewerFullName[0].ToString() : "?"))
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-900 font-bold">@(string.IsNullOrEmpty(r.ReviewerFullName) ? "Unassigned" : r.ReviewerFullName)</p>
+                                            <p class="text-[10px] text-gray-400 uppercase tracking-wider font-black">@(r.ReviewerRole?.ToString() ?? "Reviewer")</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <div class="flex flex-col items-center">
+                                        @if (r.Status == ReviewStatus.Pending)
+                                        {
+                                            <span class="text-gray-300 font-mono italic">Awaiting...</span>
+                                        }
+                                        else
+                                        {
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-xl font-black text-gray-900">@r.Score</span>
+                                                <span class="text-gray-400 text-xs">/ 10</span>
+                                            </div>
+                                            <div class="w-16 h-1 bg-gray-100 rounded-full mt-2 overflow-hidden">
+                                                <div class="h-full bg-brand-red rounded-full" style="width: @(r.Score * 10)%"></div>
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    @{
+                                        var statusCss = r.Status switch {
+                                            ReviewStatus.Pending => "bg-yellow-50 text-yellow-700",
+                                            ReviewStatus.Reviewed => "bg-blue-50 text-blue-700",
+                                            ReviewStatus.Accepted => "bg-green-50 text-green-700",
+                                            ReviewStatus.Rejected => "bg-red-50 text-red-700",
+                                            _ => "bg-gray-50 text-gray-700"
+                                        };
+                                    }
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider @statusCss border border-current opacity-80">
+                                        @r.Status
+                                    </span>
+                                </td>
+                                <td class="px-8 py-6 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <a asp-action="Detail" asp-route-id="@r.Id" 
+                                           class="p-2 text-gray-400 hover:text-brand-dark transition-all"
+                                           title="View Details">
+                                            <i class="ph ph-eye text-xl"></i>
+                                        </a>
+                                        @if (r.Status == ReviewStatus.Pending)
+                                        {
+                                            <button type="button" 
+                                                    class="p-2 text-gray-400 hover:text-blue-600 transition-all open-assign-modal-btn"
+                                                    data-group-id="@r.GroupId"
+                                                    data-group-name="@r.GroupName"
+                                                    title="Reassign Reviewer">
+                                                <i class="ph ph-user-plus text-xl"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        @if (Model.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="5" class="px-8 py-32 text-center">
+                                    <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <i class="ph ph-clipboard-text text-5xl text-gray-200"></i>
+                                    </div>
+                                    <h3 class="text-2xl font-bold text-gray-900 mb-2">No Records Found</h3>
+                                    <p class="text-gray-400 max-w-sm mx-auto">We couldn't find any reviews matching your current filters. Try resetting your search or creating a new assignment.</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex items-center justify-between px-8 py-5 border-t border-gray-200 bg-white shrink-0">
+                <div class="flex items-center gap-6">
+                    <div class="hidden sm:block text-sm text-gray-500">
+                        Showing <span class="font-medium text-gray-900">@startItem</span> - <span class="font-medium text-gray-900">@endItem</span> of <span class="font-medium text-gray-900">@totalCount</span> results
                     </div>
-                    <div>
-                        <h4 class="font-bold text-sm">Group: Cyber-Warriors</h4>
-                        <p class="text-xs text-gray-500">Task: System Architecture Design • Cohort 19</p>
-                    </div>
+
+                    <form method="get" asp-action="Index" class="flex items-center gap-2 text-sm">
+                        <input type="hidden" name="q" value="@searchTerm" />
+                        <input type="hidden" name="status" value="@((int?)currentStatus)" />
+                        <input type="hidden" name="page" value="0" />
+                        
+                        <span class="text-gray-500">Show</span>
+                        <select name="pageSize" onchange="this.form.submit()" class="border border-gray-200 rounded-lg px-2 py-1 text-gray-700 focus:outline-none focus:ring-1 focus:ring-red-400">
+                            <option value="5" selected="@(pageSize == 5)">5</option>
+                            <option value="10" selected="@(pageSize == 10)">10</option>
+                            <option value="15" selected="@(pageSize == 15)">15</option>
+                            <option value="20" selected="@(pageSize == 20)">20</option>
+                            <option value="25" selected="@(pageSize == 25)">25</option>
+                        </select>
+                        <span class="text-gray-500">per page</span>
+                    </form>
                 </div>
 
-                <div class="flex items-center gap-6">
-                    <div class="text-center">
-                        <p class="text-xs text-gray-400 uppercase font-bold">Auto-Score</p>
-                        <p class="text-sm font-bold text-green-600">8/10 Tests</p>
+                <div class="flex gap-2">
+                    <a asp-action="Index" asp-route-q="@searchTerm" asp-route-status="@((int?)currentStatus)" asp-route-page="@(currentPage - 1)" asp-route-pageSize="@pageSize"
+                       class="px-3 py-1.5 border rounded-lg text-sm font-medium @(currentPage == 0 ? "border-gray-200 text-gray-400 bg-gray-50 pointer-events-none" : "border-gray-200 text-gray-600 hover:bg-gray-50")">
+                        Previous
+                    </a>
+                    <div class="hidden sm:flex gap-1">
+                        @for (var i = 0; i < totalPages; i++)
+                        {
+                            <a asp-action="Index" asp-route-q="@searchTerm" asp-route-status="@((int?)currentStatus)" asp-route-page="@i" asp-route-pageSize="@pageSize"
+                               class="px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors @(i == currentPage ? "border-red-200 bg-red-50 text-red-600" : "border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900")">
+                                @(i + 1)
+                            </a>
+                        }
                     </div>
-
-                    <div class="flex gap-2">
-                        <button class="px-3 py-1.5 border rounded-lg text-xs font-bold hover:bg-gray-50">
-                            Assign Peer Reviewer
-                        </button>
-                        <button
-                            class="px-3 py-1.5 bg-brand-red text-white rounded-lg text-xs font-bold hover:bg-red-700">
-                            Review Personally
-                        </button>
-                    </div>
+                    <a asp-action="Index" asp-route-q="@searchTerm" asp-route-status="@((int?)currentStatus)" asp-route-page="@(currentPage + 1)" asp-route-pageSize="@pageSize"
+                       class="px-3 py-1.5 border rounded-lg text-sm font-medium @(currentPage >= totalPages - 1 ? "border-gray-200 text-gray-400 bg-gray-50 pointer-events-none" : "border-gray-200 text-gray-600 hover:bg-gray-50")">
+                        Next
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<partial name="_AssignReviewModal" />
+
+@section Scripts {
+    <script>
+        let mainSearchTimer;
+        const mainSearchInput = document.getElementById('mainSearchInput');
+        
+        if (mainSearchInput) {
+            mainSearchInput.addEventListener('input', (e) => {
+                clearTimeout(mainSearchTimer);
+                mainSearchTimer = setTimeout(() => {
+                    document.getElementById('searchForm').submit();
+                }, 500);
+            });
+        }
+
+        const assignModal = document.getElementById('assignReviewModal');
+        const reviewerListContainer = document.getElementById('reviewerListContainer');
+        const searchInput = document.getElementById('searchReviewerInput');
+        const confirmBtn = document.getElementById('confirmAssignReview');
+        const selectedText = document.getElementById('selectedReviewerText');
+        
+        let currentGroupId = null;
+        let selectedReviewerId = null;
+        let debounceTimer;
+
+        // Open Modal
+        document.querySelectorAll('.open-assign-modal-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentGroupId = btn.dataset.groupId;
+                document.getElementById('targetGroupName').innerText = btn.dataset.groupName;
+                
+                assignModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                
+                // Reset
+                searchInput.value = '';
+                selectedReviewerId = null;
+                confirmBtn.disabled = true;
+                selectedText.innerText = 'No student selected';
+                reviewerListContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-12 text-gray-400">
+                        <i class="ph ph-users-three text-5xl mb-4 opacity-20"></i>
+                        <p class="text-sm font-medium">Search for a student to begin</p>
+                    </div>`;
+            });
+        });
+
+        // Close Modal
+        const closeModal = () => {
+            assignModal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        };
+
+        document.querySelectorAll('.close-modal-btn, .modal-overlay').forEach(btn => {
+            btn.addEventListener('click', closeModal);
+        });
+
+        // Search Logic
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            const query = e.target.value.trim();
+            
+            if (query.length < 2) {
+                reviewerListContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-12 text-gray-400">
+                        <i class="ph ph-users-three text-5xl mb-4 opacity-20"></i>
+                        <p class="text-sm font-medium">Search for a student to begin</p>
+                    </div>`;
+                return;
+            }
+
+            debounceTimer = setTimeout(async () => {
+                reviewerListContainer.innerHTML = `
+                    <div class="flex justify-center py-12">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-red"></div>
+                    </div>`;
+
+                try {
+                    const res = await fetch(`/Mentor/Review/GetStudents?q=${encodeURIComponent(query)}`);
+                    const students = await res.json();
+                    renderStudents(students);
+                } catch (err) {
+                    reviewerListContainer.innerHTML = `<p class="text-center text-red-500 py-8">Failed to fetch students.</p>`;
+                }
+            }, 300);
+        });
+
+        function renderStudents(students) {
+            if (students.length === 0) {
+                reviewerListContainer.innerHTML = `<p class="text-center text-gray-500 py-8">No students found.</p>`;
+                return;
+            }
+
+            reviewerListContainer.innerHTML = students.map(s => `
+                <div class="reviewer-item flex items-center justify-between p-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all border border-transparent hover:border-gray-100 mb-2" 
+                     onclick="selectReviewer('${s.id}', '${s.fullName}')">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400">
+                            <i class="ph ph-user text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-900">${s.fullName}</p>
+                            <p class="text-xs text-gray-500">${s.email}</p>
+                        </div>
+                    </div>
+                    <div class="selection-indicator w-6 h-6 rounded-full border-2 border-gray-200 flex items-center justify-center">
+                        <div class="inner-dot w-2.5 h-2.5 rounded-full bg-brand-red hidden"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.selectReviewer = (id, name) => {
+            selectedReviewerId = id;
+            selectedText.innerText = `Selected: ${name}`;
+            confirmBtn.disabled = false;
+
+            // Visual update
+            document.querySelectorAll('.reviewer-item').forEach(item => {
+                item.classList.remove('bg-red-50', 'border-brand-red/20');
+                item.querySelector('.selection-indicator').classList.remove('border-brand-red');
+                item.querySelector('.inner-dot').classList.add('hidden');
+            });
+
+            const selectedItem = event.currentTarget;
+            selectedItem.classList.add('bg-red-50', 'border-brand-red/20');
+            selectedItem.querySelector('.selection-indicator').classList.add('border-brand-red');
+            selectedItem.querySelector('.inner-dot').classList.remove('hidden');
+        };
+
+        // Confirm Assignment
+        confirmBtn.addEventListener('click', async () => {
+            if (!currentGroupId || !selectedReviewerId) return;
+
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = `<i class="ph ph-circle-notch animate-spin"></i> Assigning...`;
+
+            try {
+                const res = await fetch('/Mentor/Review/AssignReview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupId: currentGroupId,
+                        reviewerId: selectedReviewerId
+                    })
+                });
+
+                if (res.ok) {
+                    location.reload();
+                } else {
+                    const data = await res.json();
+                    alert(data.message || 'Failed to assign review.');
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerText = 'Assign Review';
+                }
+            } catch (err) {
+                alert('An error occurred. Please try again.');
+                confirmBtn.disabled = false;
+                confirmBtn.innerText = 'Assign Review';
+            }
+        });
+
+        // Close on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+}

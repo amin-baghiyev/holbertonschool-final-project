@@ -1,1 +1,224 @@
-test
+@using PLDMS.PL.Areas.Student.ViewModels
+@using Microsoft.AspNetCore.Identity
+@using PLDMS.Core.Entities
+@inject UserManager<AppUser> UserManager
+@model StudentDashboardViewModel
+
+@{
+    ViewData["Title"] = "Student Dashboard";
+    var user = await UserManager.GetUserAsync(User);
+    var fullName = user?.FullName ?? "Student";
+}
+
+<div class="max-w-7xl p-4 sm:p-6 lg:p-8 font-sans animate-fade-in">
+    <!-- Welcome Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Welcome back, @fullName!</h1>
+        <p class="mt-2 text-sm text-gray-500">Here's what's happening in your curriculum today.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left Column: Active & Upcoming Sessions (Larger) -->
+        <div class="lg:col-span-2 space-y-8">
+            
+            <!-- Active Sessions Section -->
+            <section>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <i class="ph ph-lightning text-yellow-500"></i> Active Sessions
+                    </h2>
+                    <a href="@Url.Action("Index", "Session", new { area = "Student" })" class="text-sm font-medium text-blue-600 hover:text-blue-500 transition">View All</a>
+                </div>
+
+                @if(!Model.ActiveSessions.Any())
+                {
+                    <div class="bg-gray-50 border border-gray-200 border-dashed rounded-xl p-8 text-center">
+                        <i class="ph ph-check-circle text-4xl text-gray-400 mb-3 mx-auto"></i>
+                        <h3 class="text-base font-medium text-gray-900">You're all caught up!</h3>
+                        <p class="text-sm text-gray-500 mt-1">There are no active sessions assigned to you right now.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @foreach(var session in Model.ActiveSessions)
+                        {
+                            <div class="bg-white border border-green-200 rounded-xl p-5 shadow-sm hover:shadow-md transition group">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-semibold text-gray-900 text-base leading-tight group-hover:text-blue-600 transition truncate" title="@session.Name">
+                                            @session.Name
+                                        </h3>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            @session.ProgramName &bull; @session.CohortName
+                                        </p>
+                                    </div>
+                                    <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-bold uppercase tracking-wider ml-2 shrink-0">Active</span>
+                                </div>
+
+                                <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-500">
+                                    <div class="flex items-center gap-1">
+                                        <i class="ph ph-clock text-gray-400"></i>
+                                        <span>@session.StartDate.ToString("HH:mm") – @session.EndDate.ToString("HH:mm")</span>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <i class="ph ph-users text-gray-400"></i>
+                                        <span>@session.GroupName <br> @session.GroupStudentCount members</span>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-4 border-t border-gray-100">
+                                    <a href="@Url.Action("Details", "Session", new { area = "Student", id = session.Id })" class="w-full text-center flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white py-2 px-4 rounded-lg text-sm font-medium transition shadow-sm">
+                                        Jump to Workspace <i class="ph ph-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+
+            <!-- Upcoming Sessions Section -->
+            <section>
+                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="ph ph-calendar-blank text-indigo-500"></i> Upcoming Sessions
+                </h2>
+
+                @if(!Model.UpcomingSessions.Any())
+                {
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 text-center">
+                        <p class="text-sm text-gray-500">No upcoming sessions scheduled yet.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="bg-white border border-gray-200 rounded-xl shadow-sm divide-y divide-gray-100 overflow-hidden">
+                        @foreach(var session in Model.UpcomingSessions)
+                        {
+                            var timeLeft = session.StartDate - DateTime.UtcNow.AddHours(4);
+                            var countdownText = timeLeft.TotalHours < 24
+                                    ? $"in {(int)timeLeft.TotalHours}h {timeLeft.Minutes}m"
+                                    : $"in {(int)timeLeft.TotalDays} day{((int)timeLeft.TotalDays == 1 ? "" : "s")}";
+                            
+                            <div class="p-4 flex items-center justify-between hover:bg-gray-50 transition">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-indigo-50 rounded-lg flex flex-col items-center justify-center text-indigo-700 font-bold border border-indigo-100 shrink-0">
+                                        <span class="text-xs uppercase">@session.StartDate.ToString("MMM")</span>
+                                        <span class="text-lg leading-none">@session.StartDate.ToString("dd")</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900 text-sm">@session.Name</h4>
+                                        <p class="text-xs text-gray-500 mt-0.5">
+                                            @session.ProgramName &bull; @session.CohortName
+                                        </p>
+                                        <p class="text-xs text-indigo-500 mt-0.5 font-semibold">
+                                            @session.StartDate.ToString("HH:mm") – @session.EndDate.ToString("HH:mm") &bull; Unlocks @countdownText
+                                        </p>
+                                        <p class="text-xs text-gray-400 mt-0.5">
+                                            <i class="ph ph-users"></i> @session.GroupName &bull; @session.GroupStudentCount members
+                                        </p>
+                                    </div>
+                                </div>
+                                <span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold uppercase shrink-0 ml-2">Upcoming</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+        </div>
+
+        <!-- Right Column: Recent Reviews & Stats -->
+        <div class="space-y-8">
+            
+            <!-- Code Reviews Section -->
+            <section>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <i class="ph ph-check-square-offset text-teal-500"></i> Code Reviews
+                    </h2>
+                    <a href="@Url.Action("Index", "Review", new { area = "Student" })" class="text-sm font-medium text-blue-600 hover:text-blue-500 transition">View All</a>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    @if(!Model.RecentReviews.Any())
+                    {
+                        <div class="p-6 text-center text-sm text-gray-500">
+                            No recent code reviews assigned to you.
+                        </div>
+                    }
+                    else
+                    {
+                        <ul class="divide-y divide-gray-100">
+                            @foreach(var review in Model.RecentReviews)
+                            {
+                                <li class="p-4 hover:bg-gray-50 transition cursor-pointer" onclick="window.location.href='@Url.Action("Detail", "Review", new { area = "Student", id = review.Id })'">
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-900 line-clamp-1">Review: @review.GroupName</p>
+                                            <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                                <i class="ph ph-user-circle"></i> Assigned by @review.AssignedByName
+                                            </p>
+                                        </div>
+                                        
+                                        @{
+                                            var statusColor = review.ReviewStatus switch
+                                            {
+                                                PLDMS.Core.Enums.ReviewStatus.Pending => "bg-yellow-100 text-yellow-700",
+                                                PLDMS.Core.Enums.ReviewStatus.Reviewed => "bg-green-100 text-green-700",
+                                                _ => "bg-gray-100 text-gray-700"
+                                            };
+                                        }
+                                        <span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider whitespace-nowrap @statusColor">
+                                            @review.ReviewStatus
+                                        </span>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </section>
+
+            <!-- Stats Summary Panel -->
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+                <h3 class="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                    <i class="ph ph-chart-bar text-brand-red"></i> Your Activity
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center">
+                                <i class="ph ph-lightning text-green-600"></i>
+                            </div>
+                            <span class="text-sm text-gray-600">Active Sessions</span>
+                        </div>
+                        <span class="text-lg font-bold text-gray-900">@Model.ActiveSessions.Count</span>
+                    </div>
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center">
+                                <i class="ph ph-calendar-blank text-indigo-600"></i>
+                            </div>
+                            <span class="text-sm text-gray-600">Upcoming Sessions</span>
+                        </div>
+                        <span class="text-lg font-bold text-gray-900">@Model.UpcomingSessions.Count</span>
+                    </div>
+                    <div class="flex items-center justify-between py-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 bg-yellow-50 rounded-lg flex items-center justify-center">
+                                <i class="ph ph-file-text text-yellow-600"></i>
+                            </div>
+                            <span class="text-sm text-gray-600">Pending Reviews</span>
+                        </div>
+                        <span class="text-lg font-bold text-gray-900">@Model.RecentReviews.Count(r => r.ReviewStatus == PLDMS.Core.Enums.ReviewStatus.Pending)</span>
+                    </div>
+                </div>
+                <a href="@Url.Action("Index", "Session", new { area = "Student" })" class="mt-5 w-full flex items-center justify-center gap-2 bg-brand-red hover:bg-red-700 text-white py-2.5 rounded-lg text-sm font-semibold transition shadow-sm">
+                    <i class="ph ph-grid-four"></i> View All Sessions
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>

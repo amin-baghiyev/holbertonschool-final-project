@@ -1,0 +1,435 @@
+@model PLDMS.BL.DTOs.ReviewDetailDTO
+@using PLDMS.Core.Enums
+@{
+    Layout = null;
+    var isMentor = User.IsInRole("Mentor");
+    var firstSub = Model.Submissions.FirstOrDefault();
+    var area = isMentor ? "Mentor" : "Student";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLDMS Review Workspace - @Model.GroupName</title>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script src="https://unpkg.com/@@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { red: '#E03C31', dark: '#141729', light: '#F9FAFB' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
+
+        .mini-sidebar { width: 56px; transition: width 0.2s ease; }
+        .mini-sidebar .sidebar-label { display: none; }
+        .mini-sidebar:hover { width: 200px; }
+        .mini-sidebar:hover .sidebar-label { display: inline; }
+
+        .active-task-btn {
+            background-color: #E03C31 !important;
+            color: white !important;
+            border-color: #E03C31 !important;
+        }
+
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="bg-[#1e1e1e] text-gray-200 font-sans antialiased overflow-hidden h-screen">
+
+<div class="flex h-screen">
+
+    <!-- Mini Sidebar -->
+    <aside class="mini-sidebar bg-brand-dark flex flex-col shrink-0 z-20 border-r border-gray-800">
+        <div class="h-12 flex items-center justify-center border-b border-gray-700 px-2">
+            <span class="text-brand-red font-bold text-xs">PLDMS</span>
+            <span class="sidebar-label text-white text-xs font-semibold ml-1">Review</span>
+        </div>
+
+        <nav class="flex-1 flex flex-col gap-1 py-3 px-2">
+            <a href="@Url.Action("Index", "Review", new { area = area })"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+               title="Back to Reviews">
+                <i class="ph ph-arrow-left text-lg shrink-0"></i>
+                <span class="sidebar-label text-sm font-medium whitespace-nowrap">Back to List</span>
+            </a>
+            @if (isMentor)
+            {
+                <a href="@Url.Action("AssignableGroups", "Review", new { area = "Mentor" })"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                   title="Groups Needing Review">
+                    <i class="ph ph-users-three text-lg shrink-0"></i>
+                    <span class="sidebar-label text-sm font-medium whitespace-nowrap">Assignable Groups</span>
+                </a>
+            }
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+
+        <!-- Header -->
+        <header class="h-12 bg-[#252526] border-b border-[#333] flex items-center justify-between px-4 shrink-0 z-10">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="flex items-center gap-2 text-gray-300 text-sm font-medium truncate">
+                    <i class="ph ph-microscope text-red-400"></i>
+                    <span class="truncate">Reviewing: <b class="text-white">@Model.GroupName</b></span>
+                    <i class="ph ph-caret-right text-gray-600 text-xs"></i>
+                    <span class="text-gray-400 truncate">@Model.SessionName</span>
+                </div>
+                <div class="flex items-center gap-2 ml-4">
+                    <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded border @(Model.Status == ReviewStatus.Pending ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" : "bg-green-500/20 text-green-400 border-green-500/30")">
+                        @Model.Status
+                    </span>
+                    @if (Model.Status != ReviewStatus.Pending)
+                    {
+                        <span class="text-sm font-black text-white">@Model.Score <span class="text-[10px] text-gray-500">/ 10</span></span>
+                    }
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <a href="@Model.RepositoryUrl" target="_blank" class="flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
+                    <i class="ph ph-github-logo"></i> Repository
+                </a>
+            </div>
+        </header>
+
+        <!-- Workspace -->
+        <div class="flex-1 flex overflow-hidden">
+
+            <!-- Sidebar: Tasks -->
+            <div class="w-64 border-r border-[#333] bg-[#252526] flex flex-col">
+                <div class="p-3 text-[10px] font-bold uppercase tracking-widest text-gray-500 border-b border-[#333]">
+                    Submission Artifacts (@Model.Submissions.Count)
+                </div>
+                <div class="flex-1 overflow-y-auto p-2 space-y-1" id="taskList">
+                    @foreach (var sub in Model.Submissions)
+                    {
+                        <button onclick="switchTask('@sub.ExerciseId')" 
+                                id="btn-@sub.ExerciseId"
+                                class="task-btn w-full text-left px-3 py-2.5 rounded-lg flex flex-col gap-1 transition-all border border-transparent @(sub.ExerciseId == firstSub?.ExerciseId ? "active-task-btn" : "hover:bg-white/5 text-gray-400 hover:text-white")">
+                            <span class="text-[11px] font-bold truncate">@sub.ExerciseName</span>
+                            <div class="flex items-center justify-between pointer-events-none">
+                                <span class="text-[9px] font-mono opacity-50 truncate">@sub.CommitHash[..7]</span>
+                                @{
+                                    var passCount = sub.Tests.Count(t => t);
+                                    var totalTests = sub.Tests.Length;
+                                }
+                                <span class="text-[9px] font-black @(passCount == totalTests && totalTests > 0 ? "text-green-400" : "text-orange-400")">
+                                    @passCount/@totalTests
+                                </span>
+                            </div>
+                        </button>
+                    }
+                </div>
+                
+                <!-- Review Panel Footer (if pending) -->
+                @if (Model.Status == ReviewStatus.Pending)
+                {
+                    <div class="p-4 border-t border-[#333] bg-[#1e1e1e]">
+                        <button onclick="toggleReviewModal()" class="w-full bg-brand-red hover:bg-red-700 text-white py-2 rounded font-bold text-xs shadow-lg shadow-red-900/20 transition-all flex items-center justify-center gap-2">
+                            <i class="ph ph-note-pencil"></i> Give Review
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="p-4 border-t border-[#333] bg-[#1e1e1e]">
+                        <div class="bg-white/5 p-3 rounded-lg border border-white/5">
+                            <h4 class="text-[10px] font-black uppercase text-gray-500 mb-2 tracking-widest">Final Note</h4>
+                            <p class="text-[11px] text-gray-300 italic">"@Model.Note"</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Detail Split View -->
+            <div class="flex-1 flex overflow-hidden">
+                
+                <!-- Left: Task Metadata (Description & Tests) -->
+                <div class="w-[40%] flex flex-col border-r border-[#333] bg-[#1e1e1e]">
+                    <div class="flex border-b border-[#333] bg-[#252526]">
+                        <button class="instruction-tab px-4 py-2.5 text-sm font-medium border-b-2 border-red-500 text-white bg-[#1e1e1e]" data-panel="descPanel">
+                            <i class="ph ph-book-open mr-1"></i> Description
+                        </button>
+                        <button class="instruction-tab px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-300 transition-colors" data-panel="testPanel" id="tab-tests">
+                            <i class="ph ph-list-checks mr-1"></i> Results
+                        </button>
+                    </div>
+
+                    <!-- Description Panel -->
+                    <div id="descPanel" class="instruction-panel flex-1 overflow-y-auto">
+                        <div class="p-6 prose prose-invert prose-sm max-w-none" id="markdownInstructionContainer"></div>
+                    </div>
+
+                    <!-- Test Cases Panel -->
+                    <div id="testPanel" class="instruction-panel flex-1 overflow-y-auto hidden">
+                        <div id="testCaseList" class="divide-y divide-[#333]">
+                           <div class="p-8 text-center text-gray-500">
+                               <i class="ph ph-spinner-gap animate-spin text-3xl mb-2"></i>
+                               <p class="text-xs">Loading test case definitions...</p>
+                           </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Code Viewer -->
+                <div class="flex-1 flex flex-col bg-[#1e1e1e]">
+                    <div class="px-4 py-2 border-b border-[#333] flex items-center justify-between bg-[#2d2d2d]">
+                       <div class="flex items-center gap-2">
+                           <i class="ph ph-code text-blue-400"></i>
+                           <span class="text-[10px] font-black uppercase tracking-widest text-gray-400" id="currentFileName">FILE_NAME</span>
+                       </div>
+                       <span id="langBadge" class="bg-gray-700 text-gray-300 px-2 py-0.5 rounded text-[9px] font-black uppercase">LANG</span>
+                    </div>
+                    <div class="flex-1 relative" id="editorContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Submission Modal (Centered) -->
+<div id="reviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="w-full max-w-lg bg-[#1e1e1e] border border-[#333] rounded-2xl shadow-2xl flex flex-col transform transition-all scale-95 opacity-0 duration-300" id="modalContent">
+        <div class="p-6 bg-[#252526] rounded-t-2xl border-b border-[#333] flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-bold text-white">Assessment</h3>
+                <p class="text-[10px] text-gray-500 uppercase font-black tracking-widest">Evaluate group performance</p>
+            </div>
+            <button onclick="toggleReviewModal()" class="text-gray-500 hover:text-white transition-colors">
+                <i class="ph ph-x text-2xl"></i>
+            </button>
+        </div>
+        
+        <form id="frmReview" class="p-8 space-y-6">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="GroupId" value="@Model.GroupId" />
+            @if (!isMentor) { <input type="hidden" name="Id" value="@Model.ReviewId" /> }
+
+            <div>
+                <label class="block text-[10px] font-black uppercase text-gray-500 mb-4 tracking-widest">Score / 10</label>
+                <div class="grid grid-cols-5 gap-2">
+                    @for (int i = 1; i <= 10; i++) {
+                        <button type="button" onclick="selectScore(@i)" class="score-btn border border-[#333] hover:border-red-500 hover:text-red-500 py-3 rounded-lg text-sm font-bold transition-all bg-white/5" data-val="@i">@i</button>
+                    }
+                </div>
+                <input type="hidden" name="Score" id="hdnScore" value="" required />
+            </div>
+
+            <div class="flex flex-col">
+                <label class="block text-[10px] font-black uppercase text-gray-500 mb-2 tracking-widest">Detailed Feedback</label>
+                <textarea name="Note" required maxlength="500" rows="5" class="w-full bg-[#2d2d2d] border border-[#444] rounded-xl p-4 text-sm text-gray-200 outline-none focus:border-red-500 transition-colors resize-none placeholder:text-gray-600" placeholder="What did they do well? What could be improved?"></textarea>
+                <div class="text-[10px] text-gray-500 mt-2 text-right">Max 500 characters</div>
+            </div>
+
+            <div class="flex gap-3 pt-4">
+               <button type="button" onclick="toggleReviewModal()" class="flex-1 px-4 py-3 border border-[#333] text-gray-400 hover:text-white rounded-xl font-bold transition-colors text-sm">Cancel</button>
+               <button type="submit" id="btnSubmitReview" class="flex-[2] bg-brand-red hover:bg-red-700 text-white py-3 rounded-xl font-bold transition-all shadow-xl shadow-red-900/30 flex items-center justify-center gap-2 text-sm">
+                   Submit Final Review
+               </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Markdown parser -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<!-- Monaco AMD Loader -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+
+<script>
+    var editor;
+    const isMentor = @(isMentor ? "true" : "false");
+    const area = "@area";
+    const submissions = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Submissions));
+    let currentExerciseId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Monaco Setup
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
+        require(['vs/editor/editor.main'], function() {
+            editor = monaco.editor.create(document.getElementById('editorContainer'), {
+                value: '',
+                language: 'plaintext',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                fontSize: 14,
+                readOnly: true,
+                minimap: { enabled: false },
+                padding: { top: 16 },
+                scrollBeyondLastLine: false,
+                renderLineHighlight: 'none'
+            });
+
+            if (submissions.length > 0) {
+                switchTask(submissions[0].ExerciseId);
+            }
+        });
+
+        // Tab Switching
+        document.querySelectorAll('.instruction-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.instruction-tab').forEach(t => {
+                    t.classList.remove('border-red-500', 'text-white', 'bg-[#1e1e1e]');
+                    t.classList.add('border-transparent', 'text-gray-500');
+                });
+                document.querySelectorAll('.instruction-panel').forEach(p => p.classList.add('hidden'));
+                
+                tab.classList.add('border-red-500', 'text-white', 'bg-[#1e1e1e]');
+                tab.classList.remove('border-transparent', 'text-gray-500');
+                document.getElementById(tab.dataset.panel).classList.remove('hidden');
+            });
+        });
+    });
+
+    async function switchTask(exerciseId) {
+        currentExerciseId = exerciseId;
+        const sub = submissions.find(s => s.ExerciseId == exerciseId);
+        if (!sub) return;
+
+        document.querySelectorAll('.task-btn').forEach(btn => btn.classList.remove('active-task-btn'));
+        document.getElementById(`btn-${exerciseId}`).classList.add('active-task-btn');
+
+        if (editor) {
+            const langMap = { 50: 'c', 63: 'javascript', 62: 'java', 71: 'python' };
+            monaco.editor.setModelLanguage(editor.getModel(), langMap[sub.Language] || 'plaintext');
+            editor.setValue(sub.SourceCode);
+        }
+        document.getElementById('currentFileName').textContent = sub.ExerciseName;
+        
+        const langDisplayNameMap = { 50: 'C', 63: 'JavaScript', 62: 'Java', 71: 'Python' };
+        document.getElementById('langBadge').textContent = langDisplayNameMap[sub.Language] || 'Unknown';
+
+        document.getElementById('markdownInstructionContainer').innerHTML = marked.parse(sub.Description);
+
+        const testList = document.getElementById('testCaseList');
+        testList.innerHTML = `<div class="p-8 text-center text-gray-500"><i class="ph ph-spinner-gap animate-spin text-3xl mb-2"></i><p class="text-xs">Fetching test data...</p></div>`;
+
+        try {
+            const res = await fetch(`/${area}/Exercise/GetTestCases?id=${exerciseId}`);
+            const testCases = await res.json();
+            renderTestCases(testCases, sub.Tests);
+        } catch (err) {
+            testList.innerHTML = `<div class="p-8 text-center text-red-400"><i class="ph ph-warning-circle text-3xl mb-2"></i><p class="text-xs">Failed to load test cases.</p></div>`;
+        }
+    }
+
+    function renderTestCases(definitions, results) {
+        const testList = document.getElementById('testCaseList');
+        testList.innerHTML = '';
+
+        definitions.forEach((def, idx) => {
+            const passed = results && results.length > idx ? results[idx] : null;
+            const statusIcon = passed === true ? 'ph-check-circle text-green-500' : (passed === false ? 'ph-x-circle text-red-500' : 'ph-circle text-gray-500');
+            const statusText = passed === true ? 'Passed' : (passed === false ? 'Failed' : 'No result');
+            const statusColor = passed === true ? 'text-green-500' : (passed === false ? 'text-red-500' : 'text-gray-500');
+
+            const html = `
+                <div class="p-4 border-b border-[#333]">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="ph ${statusIcon} text-lg"></i>
+                            <span class="text-sm font-bold text-gray-300">Test Case #${idx + 1}</span>
+                        </div>
+                        <span class="text-[9px] font-black uppercase tracking-widest ${statusColor}">${statusText}</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div>
+                            <span class="text-[9px] uppercase font-black text-gray-600 mb-1 block">Input</span>
+                            <pre class="bg-[#2d2d2d] p-3 rounded-lg text-xs font-mono border border-[#333] whitespace-pre-wrap">${def.input}</pre>
+                        </div>
+                        <div>
+                            <span class="text-[9px] uppercase font-black text-gray-600 mb-1 block">Expected Output</span>
+                            <pre class="bg-[#2d2d2d] p-3 rounded-lg text-xs font-mono border border-[#333] whitespace-pre-wrap text-green-400/80">${def.output}</pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+            testList.insertAdjacentHTML('beforeend', html);
+        });
+    }
+
+    // Modal Logic
+    function toggleReviewModal() {
+        const el = document.getElementById('reviewModal');
+        const content = document.getElementById('modalContent');
+        if (el.classList.contains('hidden')) {
+            el.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        } else {
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                el.classList.add('hidden');
+            }, 300);
+        }
+    }
+
+    function selectScore(val) {
+        document.getElementById('hdnScore').value = val;
+        document.querySelectorAll('.score-btn').forEach(btn => {
+            btn.classList.remove('bg-red-500', 'text-white', 'border-red-500');
+            if (btn.dataset.val == val) btn.classList.add('bg-red-500', 'text-white', 'border-red-500');
+        });
+    }
+
+    // Submission Logic
+    document.getElementById('frmReview').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const score = document.getElementById('hdnScore').value;
+        if (!score) { alert('Please select a score.'); return; }
+
+        const btn = document.getElementById('btnSubmitReview');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `<i class="ph ph-spinner-gap animate-spin"></i> Submitting...`;
+        btn.disabled = true;
+
+        const formData = new FormData(e.target);
+        
+        try {
+            const url = isMentor ? '/Mentor/Review/Give' : '/Student/Review/Create/' + formData.get('Id');
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                body: formData
+            });
+
+            if (res.ok) {
+                location.href = isMentor ? '/Mentor/Review' : '/Student/Review';
+            } else {
+                alert('Submission failed. Please check form constraints.');
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        } catch (err) {
+            alert('An error occurred.');
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>

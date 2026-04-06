@@ -11,7 +11,7 @@ public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
     public void Configure(EntityTypeBuilder<Submission> builder)
     {
         builder.Property(s => s.CommitHash)
-            .HasMaxLength(12);
+            .HasMaxLength(64);
 
         var boolArrayToIntArrayConverter = new ValueConverter<bool[], int[]>(
             v => v.Select(b => b ? 1 : 0).ToArray(),

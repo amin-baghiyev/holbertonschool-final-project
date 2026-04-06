@@ -2,8 +2,8 @@
 
 public enum ProgrammingLanguage
 {
-    C = 103,
-    JavaScript = 102,
-    Java = 91,
-    Python = 113
+    C = 50,
+    JavaScript = 63,
+    Java = 62,
+    Python = 71
 }

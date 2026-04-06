@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 namespace PLDMS.BL.DTOs;
 
@@ -37,7 +37,7 @@ public class SessionFormDTOValidator : AbstractValidator<SessionFormDTO>
         RuleFor(x => x.StartDate)
             .NotEmpty()
             .WithMessage("Start date is required")
-            .Must(date => date.Date >= DateTime.UtcNow.Date)
+            .Must(date => date.Date >= DateTime.UtcNow.AddHours(4).Date)
             .WithMessage("Start date cannot be in the past");
 
         RuleFor(x => x.EndDate)

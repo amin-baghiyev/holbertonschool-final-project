@@ -3,6 +3,140 @@ const form = document.getElementById('createSessionForm');
 let isEdit = false;
 let sessionId = null;
 
+let exerciseCache = {};
+let selectedExerciseIds = new Set();
+let debounceTimer;
+
+const fetchExistingExercises = async (id) => {
+    try {
+        const res = await fetch(`/Mentor/Session/GetExercisesBySessionId?id=${id}`);
+        const existingExercises = await res.json();
+        
+        if (Array.isArray(existingExercises)) {
+            existingExercises.forEach(e => {
+                selectedExerciseIds.add(e.id);
+                exerciseCache[e.id] = e;
+            });
+        }
+        return existingExercises;
+    } catch (err) {
+        console.error("Failed to fetch existing exercises:", err);
+        return [];
+    }
+};
+
+const handleExerciseSearch = async () => {
+    const searchTerm = document.getElementById('exerciseSearchInput').value.trim();
+    const diffFilter = document.getElementById('exerciseDifficultyFilter').value;
+    const progFilter = document.getElementById('exerciseProgramFilter').value;
+    const langFilter = document.getElementById('exerciseLanguageFilter').value;
+
+    if (!searchTerm && !diffFilter && !progFilter && !langFilter) {
+        // If everything is empty, just render selected
+        const selectedExercises = Object.values(exerciseCache).filter(e => selectedExerciseIds.has(e.id));
+        renderExerciseList(selectedExercises);
+        return;
+    }
+
+    const container = document.getElementById('exerciseListContainer');
+    container.innerHTML = `<div class="flex justify-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-red"></div></div>`;
+    
+    try {
+        let qs = [];
+        if (searchTerm) qs.push(`q=${encodeURIComponent(searchTerm)}`);
+        if (diffFilter) qs.push(`difficulty=${encodeURIComponent(diffFilter)}`);
+        if (progFilter) qs.push(`programId=${encodeURIComponent(progFilter)}`);
+        if (langFilter) qs.push(`language=${encodeURIComponent(langFilter)}`);
+        
+        const url = `/Mentor/Session/SearchExercises?${qs.join('&')}`;
+        const res = await fetch(url);
+        const exercises = await res.json();
+        
+        exercises.forEach(e => exerciseCache[e.id] = e);
+        
+        // We merge with selected exercise items so they aren't hidden un-intuitively
+        const mergedMap = new Map();
+        selectedExerciseIds.forEach(id => {
+            if (exerciseCache[id]) mergedMap.set(id, exerciseCache[id]);
+        });
+        exercises.forEach(e => mergedMap.set(e.id, e));
+
+        renderExerciseList(Array.from(mergedMap.values()));
+    } catch (err) {
+        container.innerHTML = `<div class="text-red-500 text-center py-4">Failed to search exercises.</div>`;
+    }
+};
+
+function renderExerciseList(exercisesToRender = []) {
+    const container = document.getElementById('exerciseListContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+    
+    const filtered = exercisesToRender.sort((a, b) => {
+        const aSel = selectedExerciseIds.has(a.id) ? -1 : 1;
+        const bSel = selectedExerciseIds.has(b.id) ? -1 : 1;
+        if (aSel !== bSel) return aSel;
+        return a.name.localeCompare(b.name);
+    });
+
+    filtered.forEach(e => {
+        const isSelected = selectedExerciseIds.has(e.id);
+        
+        const div = document.createElement('div');
+        div.className = `flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${isSelected ? 'bg-red-50 border-brand-red' : 'bg-white border-gray-200 hover:border-gray-300'}`;
+        
+        div.addEventListener('click', (ev) => {
+            if (ev.target.tagName !== 'INPUT') {
+                toggleExercise(e.id);
+            }
+        });
+        
+        let eDiffName = e.difficulty;
+        let eDiffColor = eDiffName === "Easy" ? "text-green-600 bg-green-100" : eDiffName === "Medium" ? "text-yellow-600 bg-yellow-100" : "text-red-600 bg-red-100";
+
+        div.innerHTML = `
+            <div class="flex items-center gap-3 pointer-events-none">
+                <input type="checkbox" class="w-4 h-4 text-brand-red rounded focus:ring-brand-red pointer-events-auto cursor-pointer" ${isSelected ? 'checked' : ''} onchange="toggleExercise(${e.id})">
+                <div class="flex flex-col">
+                    <span class="font-medium text-gray-900 text-sm">${e.name}</span>
+                    <span class="text-xs text-gray-500">${e.programName || 'Unknown'} • ${(e.languages || []).join(', ')}</span>
+                </div>
+            </div>
+            <div>
+                 <span class="text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${eDiffColor}">${eDiffName}</span>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-sm text-gray-500 italic">No exercises found.</div>`;
+    }
+
+    document.getElementById('exerciseVisibleCount').textContent = `${filtered.length} showing`;
+    document.getElementById('exerciseSelectionCount').textContent = `${selectedExerciseIds.size} selected`;
+}
+
+window.toggleExercise = function(id) {
+    if (selectedExerciseIds.has(id)) {
+        selectedExerciseIds.delete(id);
+    } else {
+        selectedExerciseIds.add(id);
+    }
+    handleExerciseSearch();
+};
+
+document.getElementById('exerciseSearchInput')?.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(handleExerciseSearch, 300);
+});
+
+['exerciseDifficultyFilter', 'exerciseProgramFilter', 'exerciseLanguageFilter'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', handleExerciseSearch);
+});
+
+
 const openModal = () => {
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -17,14 +151,22 @@ const closeModal = () => {
 
     form.reset();
 
+    const nameInput = form.querySelector('[name="Name"]');
+    nameInput.removeAttribute("readonly");
+    nameInput.classList.remove("bg-gray-100", "cursor-not-allowed", "text-gray-500");
+
     // Clear validation messages
     document.querySelectorAll('[data-valmsg-for]').forEach(span => span.textContent = '');
 
-    // Reset multiple select (if you use a library like Select2, trigger change here)
-    const exerciseSelect = form.querySelector('[name="ExercisesIds"]');
-    if (exerciseSelect) {
-        Array.from(exerciseSelect.options).forEach(opt => opt.selected = false);
-    }
+    selectedExerciseIds.clear();
+    exerciseCache = {};
+
+    ['exerciseSearchInput', 'exerciseDifficultyFilter', 'exerciseProgramFilter', 'exerciseLanguageFilter'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+    });
+
+    handleExerciseSearch(); // Load initial state
 
     document.getElementById('modalTitle').innerText = 'Create New Session';
 };
@@ -36,11 +178,15 @@ const handleEditClick = async (btn) => {
         const response = await fetch(`/Mentor/Session/GetForEdit?id=${sessionId}`);
         const result = await response.json();
 
-        if (result.success) {
+        if (result.data) {
             const data = result.data;
 
             // Populate standard inputs
-            form.querySelector('[name="Name"]').value = data.name;
+            const nameInput = form.querySelector('[name="Name"]');
+            nameInput.value = data.name;
+            nameInput.setAttribute("readonly", "true");
+            nameInput.classList.add("bg-gray-100", "cursor-not-allowed", "text-gray-500");
+
             form.querySelector('[name="CohortId"]').value = data.cohortId;
             form.querySelector('[name="StudentCountPerGroup"]').value = data.studentCountPerGroup;
 
@@ -48,11 +194,13 @@ const handleEditClick = async (btn) => {
             form.querySelector('[name="StartDate"]').value = data.startDate.slice(0, 16);
             form.querySelector('[name="EndDate"]').value = data.endDate.slice(0, 16);
 
-            // Populate multiple select for Exercises
-            const exerciseSelect = form.querySelector('[name="ExercisesIds"]');
-            Array.from(exerciseSelect.options).forEach(opt => {
-                opt.selected = data.exercisesIds.includes(parseInt(opt.value, 10));
-            });
+            selectedExerciseIds.clear();
+            exerciseCache = {};
+            
+            // Note: the backend GetForEdit doesn't return exercise details, 
+            // so we will query GetExercisesBySessionId directly to populate selected states accurately.
+            await fetchExistingExercises(sessionId);
+            await handleExerciseSearch();
 
             document.getElementById('modalTitle').innerText = 'Update Session';
             openModal();
@@ -61,40 +209,9 @@ const handleEditClick = async (btn) => {
         }
     } catch (error) {
         console.error("Error fetching session data:", error);
-        alert("An error occurred while loading session details.");
     }
 };
 
-const handleDeleteClick = async (btn) => {
-    const id = btn.dataset.id;
-    const name = btn.dataset.name;
-
-    if (!confirm(`Are you sure you want to delete the session "${name}"?`)) {
-        return;
-    }
-
-    const token = form.querySelector('input[name="__RequestVerificationToken"]').value;
-
-    try {
-        const response = await fetch(`/Mentor/Session/Delete?id=${id}`, {
-            method: 'DELETE',
-            headers: {
-                'RequestVerificationToken': token
-            }
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            window.location.reload();
-        } else {
-            alert(result.message || "Failed to delete session.");
-        }
-    } catch (error) {
-        console.error("Error deleting session:", error);
-        alert("An unexpected error occurred.");
-    }
-};
 
 // --- Event Listeners ---
 
@@ -113,6 +230,7 @@ document.addEventListener('click', (e) => {
         return;
     }
 
+
     // Handle Add Button
     if (target.closest('.add-session')) {
         openModal();
@@ -126,12 +244,6 @@ document.addEventListener('click', (e) => {
         return;
     }
 
-    // Handle Delete Button
-    const deleteBtn = target.closest('.trash-btn');
-    if (deleteBtn) {
-        handleDeleteClick(deleteBtn);
-        return;
-    }
 });
 
 function showValidationErrors(errors) {
@@ -166,8 +278,8 @@ document.addEventListener('submit', async (e) => {
             StudentCountPerGroup: parseInt(formData.get('StudentCountPerGroup'), 10),
             StartDate: formData.get('StartDate'),
             EndDate: formData.get('EndDate'),
-            // FormData.getAll extracts all selected values from the multiple select
-            ExercisesIds: formData.getAll('ExercisesIds').map(id => parseInt(id, 10))
+            // Map Set to Array from the custom UI
+            ExercisesIds: Array.from(selectedExerciseIds)
         };
 
         const url = sessionId ? `/Mentor/Session/Edit?id=${sessionId}` : `/Mentor/Session/Create`;
@@ -182,20 +294,17 @@ document.addEventListener('submit', async (e) => {
                 body: JSON.stringify(payload)
             });
 
-            const result = await response.json();
-
-            if (response.ok && result.success) {
+            if (response.ok) {
                 window.location.reload();
             } else {
+                const result = await response.json();
+
                 if (result.errors) {
                     showValidationErrors(result.errors);
-                } else if (result.message) {
-                    alert(result.message);
                 }
             }
         } catch (error) {
             console.error("Submission error:", error);
-            alert("An unexpected error occurred while saving the session");
         }
     }
 });

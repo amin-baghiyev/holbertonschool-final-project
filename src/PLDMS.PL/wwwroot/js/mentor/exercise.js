@@ -2,8 +2,18 @@ const modal = document.getElementById('addExerciseModal');
 const testCasesContainer = document.getElementById('testCasesContainer');
 const testCaseTemplate = document.getElementById('testCaseTemplate');
 let isEdit = false;
+let easyMDE = null;
 
-// Populate Programs Dropdown
+const initEditor = () => {
+    if (!easyMDE && document.getElementById('exerciseDescriptionEditor')) {
+        easyMDE = new EasyMDE({ 
+            element: document.getElementById('exerciseDescriptionEditor'),
+            spellChecker: false,
+            maxHeight: "200px"
+        });
+    }
+};
+
 const fetchPrograms = async () => {
     const res = await fetch('/Mentor/Exercise/GetPrograms');
     const data = await res.json();
@@ -18,10 +28,15 @@ const openModal = () => {
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 
-    // Ensure at least one test case exists when opening new
+    initEditor();
+
     if (testCasesContainer.children.length === 0) {
         addTestCaseRow();
     }
+    
+    setTimeout(() => {
+        if (easyMDE) easyMDE.codemirror.refresh();
+    }, 100);
 };
 
 const closeModal = () => {
@@ -31,16 +46,22 @@ const closeModal = () => {
 
     document.getElementById("createExerciseForm").reset();
     document.getElementById("ExerciseId").value = '';
+    
+    if (easyMDE) {
+        easyMDE.value('');
+    }
+
     testCasesContainer.innerHTML = '';
     document.querySelectorAll('[data-valmsg-for]').forEach(span => span.textContent = '');
     document.getElementById("modalTitle").innerText = "Create New Exercise";
 };
 
 // Test Case Management
-const addTestCaseRow = (inputVal = '', outputVal = '') => {
+const addTestCaseRow = (inputVal = '', outputVal = '', isExample = false) => {
     const clone = testCaseTemplate.content.cloneNode(true);
     clone.querySelector('.tc-input').value = inputVal;
     clone.querySelector('.tc-output').value = outputVal;
+    clone.querySelector('.tc-is-example').checked = isExample;
     testCasesContainer.appendChild(clone);
 };
 
@@ -64,7 +85,6 @@ const handleEditClick = async (id) => {
 
         document.getElementById("ExerciseId").value = id;
         form.querySelector('[name="Name"]').value = data.name;
-        form.querySelector('[name="Description"]').value = data.description;
         form.querySelector('[name="ProgramId"]').value = data.programId;
 
         // Match enum value (0: Easy, 1: Medium, 2: Hard)
@@ -78,7 +98,7 @@ const handleEditClick = async (id) => {
         // Populate Test Cases
         testCasesContainer.innerHTML = '';
         if (data.testCases && data.testCases.length > 0) {
-            data.testCases.forEach(tc => addTestCaseRow(tc.input, tc.output));
+            data.testCases.forEach(tc => addTestCaseRow(tc.input, tc.output, tc.isExample));
         } else {
             addTestCaseRow();
         }
@@ -86,6 +106,10 @@ const handleEditClick = async (id) => {
         document.getElementById("modalTitle").innerText = "Update Exercise";
         isEdit = true;
         openModal();
+        
+        if (easyMDE) {
+            easyMDE.value(data.description || '');
+        }
     } catch (error) {
         console.error(error);
         alert("Error loading exercise details.");
@@ -125,7 +149,7 @@ document.getElementById('createExerciseForm').addEventListener('submit', async (
     // Construct DTO payload
     const payload = {
         name: form.querySelector('[name="Name"]').value,
-        description: form.querySelector('[name="Description"]').value,
+        description: easyMDE ? easyMDE.value() : form.querySelector('[name="Description"]').value,
         programId: parseInt(form.querySelector('[name="ProgramId"]').value) || 0,
         difficulty: parseInt(form.querySelector('[name="Difficulty"]').value),
         languages: [],
@@ -141,8 +165,9 @@ document.getElementById('createExerciseForm').addEventListener('submit', async (
     form.querySelectorAll('.test-case-row').forEach(row => {
         const input = row.querySelector('.tc-input').value.trim();
         const output = row.querySelector('.tc-output').value.trim();
+        const isExample = row.querySelector('.tc-is-example').checked;
         if (input || output) {
-            payload.testCases.push({ input, output });
+            payload.testCases.push({ input, output, isExample });
         }
     });
 
@@ -179,3 +204,15 @@ function showValidationErrors(errors) {
         if (span) span.textContent = errors[key][0];
     }
 }
+
+document.addEventListener("DOMContentLoaded", async () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('action') === 'edit') {
+        const id = params.get('id');
+        if (id) {
+            await fetchPrograms();
+            await handleEditClick(id);
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+});

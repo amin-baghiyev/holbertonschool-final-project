@@ -80,27 +80,35 @@ public class CohortService : ICohortService
             .ToListAsync();
     }
     
-    public async Task<ICollection<StudentSelectItemDTO>> GetStudentSelectItemsAsync()
+    public async Task<ICollection<StudentSelectItemDTO>> GetStudentSelectItemsAsync(string? q = null, int count = 25)
     {
         var students = _userManager.Users.Where(u => u.Role == UserRole.Student);
 
-        var items = students
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var qPattern = $"%{q}%";
+            students = students.Where(u => EF.Functions.ILike(u.FullName, qPattern) || EF.Functions.ILike(u.Email, qPattern));
+        }
+
+        var items = await students
+            .Take(count)
             .Select(u => new StudentSelectItemDTO
             {
                 Id = u.Id,
                 FullName = u.FullName,
                 Email = u.Email
-            }).ToList();
+            }).ToListAsync();
 
         return items;
     }
 
-    public async Task<(ICollection<CohortTableItemDTO> Items, int TotalCount)> CohortsAsTableItemAsync(string q, int page = 0, int count = 10)
+    public async Task<(ICollection<CohortTableItemDTO> Items, int TotalCount)> CohortsAsTableItemAsync(string q, bool onlyActive = true, int page = 0, int count = 10)
     {
         var (cohorts, totalCount) = await _cohortRepository.GetAllAsync(c=> 
-            string.IsNullOrWhiteSpace(q) ||
+            (!onlyActive || !c.IsDeleted) &&
+            (string.IsNullOrWhiteSpace(q) ||
             EF.Functions.ILike(c.Name, $"%{q}%") ||
-            EF.Functions.ILike(c.Program.Name, $"%{q}%"),
+            EF.Functions.ILike(c.Program.Name, $"%{q}%")),
             page,
             count,
             includes: cohort => cohort.Include(c => c.Program)
@@ -180,18 +188,6 @@ public class CohortService : ICohortService
         cohort.EndDate = dto.EndDate;
         
         _cohortRepository.Update(cohort);
-    }
-
-    public async Task DeleteAsync(int id)
-    {
-        var cohort = await _cohortRepository.GetOneAsync(c => c.Id == id);
-
-        if (cohort == null)
-        {
-            throw new BaseException("Cohort not found");
-        }
-        
-        _cohortRepository.Delete(cohort);
     }
 
     public async Task SoftDeleteAsync(int id)

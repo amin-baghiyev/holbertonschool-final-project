@@ -17,9 +17,9 @@ public class ProgramController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? q)
+    public async Task<IActionResult> Index(string? q, bool onlyActive = true)
     {
-        var programs = await _programService.ProgramsAsItemAsync(q ?? "");
+        var programs = await _programService.ProgramsAsItemAsync(q ?? "", onlyActive);
         ViewBag.CurrentSearch = q ?? "";
         return View(programs);
     }
@@ -49,15 +49,6 @@ public class ProgramController : Controller
         }
 
         await _programService.UpdateAsync(id, dto);
-        await _programService.SaveChangesAsync();
-        return Ok();
-    }
-
-    [HttpDelete]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id)
-    {
-        await _programService.DeleteAsync(id);
         await _programService.SaveChangesAsync();
         return Ok();
     }

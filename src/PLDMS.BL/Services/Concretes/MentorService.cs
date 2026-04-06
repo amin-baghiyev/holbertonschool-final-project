@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PLDMS.BL.Common;
 using PLDMS.BL.DTOs.MentorDTOs;
-using PLDMS.BL.Extension;
 using PLDMS.BL.Services.Abstractions;
 using PLDMS.BL.Utilities;
 using PLDMS.Core.Entities;
@@ -13,102 +12,110 @@ namespace PLDMS.BL.Services.Concretes;
 
 public class MentorService : IMentorService
 {
-    private readonly UserManager<AppUser> _userManager;
-    private readonly IEmailService _emailService;
-    private readonly IRepository<AppUser> _mentorRepository;
+	private readonly UserManager<AppUser> _userManager;
+	private readonly IEmailService _emailService;
+	private readonly IRepository<AppUser> _mentorRepository;
 
-    public MentorService(UserManager<AppUser> userManager, IRepository<AppUser> mentorRepository, IEmailService emailService)
-    {
-        _userManager = userManager;
-        _mentorRepository = mentorRepository;
-        _emailService = emailService;
-    }
+	public MentorService(UserManager<AppUser> userManager, IRepository<AppUser> mentorRepository, IEmailService emailService)
+	{
+		_userManager = userManager;
+		_mentorRepository = mentorRepository;
+		_emailService = emailService;
+	}
 
-    public async Task<(ICollection<MentorTableItemDTO> Items, int TotalCount)> MentorsAsTableItemAsync(string q, int page = 1, int count = 10)
-    {
-        var query = _userManager.Users.Where(u => u.Role == UserRole.Mentor);
-        
-        if (!string.IsNullOrWhiteSpace(q))
-        {
-            query = query.Where(u => u.Email.Contains(q, StringComparison.OrdinalIgnoreCase) 
-                                  || u.UserName.Contains(q, StringComparison.OrdinalIgnoreCase));
-        }
+	public async Task<(ICollection<MentorTableItemDTO> Items, int TotalCount)> MentorsAsTableItemAsync(string q, bool onlyActive = true, int page = 0, int count = 10)
+	{
+		var query = _userManager.Users.Where(u => u.Role == UserRole.Mentor && (!onlyActive || !u.IsDeleted));
 
-        var totalCount = await query.CountAsync();
+		if (!string.IsNullOrWhiteSpace(q))
+		{
+			query = query.Where(u => EF.Functions.ILike(u.Email, $"%{q}%") || EF.Functions.ILike(u.FullName, $"%{q}%"));
+		}
 
-        var items = await query
-            .Skip(page * count)
-            .Take(count)
-            .Select(u => new MentorTableItemDTO
-            {
-                Id = u.Id,
-                Email = u.Email,
-                UserName = u.UserName,
-                FullName = u.FullName
-            }).ToListAsync();
+		var totalCount = await query.CountAsync();
 
-        return (items, totalCount);
-    }
+		var items = await query
+			.Skip(page * count)
+			.Take(count)
+			.Select(u => new MentorTableItemDTO
+			{
+				Id = u.Id,
+				Email = u.Email,
+				FullName = u.FullName,
+				CreatedAt = u.CreatedAt,
+				IsDeleted = u.IsDeleted
+			})
+			.OrderByDescending(u => u.CreatedAt)
+			.ToListAsync();
 
-    public async Task CreateAsync(MentorFormDTO dto)
-    {
-        var existingUser = await _userManager.FindByEmailAsync(dto.Email);
-        if (existingUser != null) throw new BaseException("Email already exists.");
+		return (items, totalCount);
+	}
 
-        var user = new AppUser
-        {
-            UserName = dto.UserName,
-            Email = dto.Email,
-            FullName = dto.FullName,
-            Role = UserRole.Mentor
-        };
+	public async Task CreateAsync(MentorFormDTO dto)
+	{
+		var exists = await _userManager.Users.AnyAsync(u => u.NormalizedEmail == _userManager.NormalizeEmail(dto.Email));
+		if (exists) throw new BaseException("Email already exists");
 
-        string randomPassword = Guid.NewGuid().ToString("N").Substring(0, 12);
+		var user = new AppUser
+		{
+			Email = dto.Email,
+			UserName = dto.Email,
+			FullName = dto.FullName,
+			Role = UserRole.Mentor,
+			CreatedAt = DateTime.UtcNow.AddHours(4)
+		};
 
-        var result = await _userManager.CreateAsync(user, randomPassword);
-        
-        if (result.Succeeded)
-        {
-            _ = _emailService.SendEmailAsync(user.Email, "test", randomPassword);
-            Console.WriteLine($"Email: {user.Email}");
-            Console.WriteLine($"Password: {randomPassword}");
-        }
-        else
-        {
-            throw new BaseException($"Failed to create mentor: {string.Join(", ", result.Errors.Select(e => e.Description))}");
-        }
-    }
+		string randomPassword = Guid.NewGuid().ToString("N").Substring(0, 12);
 
-    public async Task UpdateAsync(Guid id, MentorFormDTO dto)
-    {
-        var user = await _userManager.FindByIdAsync(id.ToString());
-        if (user == null) throw new BaseException("Mentor not found.");
+		var result = await _userManager.CreateAsync(user, randomPassword);
 
-        user.Email = dto.Email;
-        user.UserName = dto.UserName;
-        user.FullName = dto.FullName;
+		if (result.Succeeded)
+		{
+			_ = _emailService.SendEmailAsync(user.Email, "Your account has been created", $"Email: {dto.Email}<br>Password: {randomPassword}");
+			Console.WriteLine($"Email: {user.Email}");
+			Console.WriteLine($"Password: {randomPassword}");
+		}
+		else
+		{
+			throw new BaseException($"Failed to create mentor: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+		}
+	}
 
-        var result = await _userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-        {
-            throw new BaseException("Update failed.");
-        }
-    }
+	public async Task UpdateAsync(Guid id, MentorFormDTO dto)
+	{
+		var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+		if (existingUser is not null && existingUser.Id != id)
+			throw new BaseException("Email already exists");
 
-    public async Task DeleteAsync(Guid id)
-    {
-        var user = await _userManager.FindByIdAsync(id.ToString());
-        
-        if (user == null)
-        {
-            throw new BaseException("Mentor not found.");
-        }
-        
-        await _userManager.DeleteAsync(user);
-    }
+		var user = await _userManager.FindByIdAsync(id.ToString()) ?? throw new BaseException("Mentor not found");
 
-    public Task<int> SaveChangesAsync()
-    {
-        return _mentorRepository.SaveChangesAsync();
-    }
+		user.Email = dto.Email;
+		user.UserName = dto.Email;
+		user.FullName = dto.FullName;
+
+		var result = await _userManager.UpdateAsync(user);
+		if (!result.Succeeded)
+			throw new BaseException(string.Join(", ", result.Errors.Select(e => e.Description)));
+	}
+
+	public async Task SoftDeleteAsync(Guid id)
+	{
+		var user = await _userManager.FindByIdAsync(id.ToString()) ?? throw new BaseException("Mentor not found");
+
+		user.IsDeleted = true;
+		await _userManager.UpdateAsync(user);
+	}
+
+	public async Task RecoverAsync(Guid id)
+	{
+		var user = await _userManager.FindByIdAsync(id.ToString()) ?? throw new BaseException("Mentor not found");
+
+		user.IsDeleted = false;
+		await _userManager.UpdateAsync(user);
+	}
+
+	public Task<int> SaveChangesAsync()
+	{
+		return _mentorRepository.SaveChangesAsync();
+	}
 }

@@ -1,0 +1,620 @@
+@using PLDMS.BL.DTOs
+@using PLDMS.Core.Enums
+@model ExerciseFormDTO
+
+@{
+    Layout = null; // No sidebar layout — full-screen workspace
+    var groupId = ViewBag.GroupId as Guid?;
+    var sessionName = ViewBag.SessionName as string ?? "Session";
+    var sessionEndDate = ViewBag.SessionEndDate as DateTime?;
+    var sessionId = ViewBag.SessionId as Guid?;
+
+    var diffColor = Model.Difficulty switch
+    {
+        ExerciseDifficulty.Easy   => "bg-green-500/20 text-green-400 border-green-500/30",
+        ExerciseDifficulty.Medium => "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+        ExerciseDifficulty.Hard   => "bg-red-500/20 text-red-400 border-red-500/30",
+        _                         => "bg-gray-500/20 text-gray-400 border-gray-500/30"
+    };
+
+    var submissions = ViewBag.Submissions as IEnumerable<PLDMS.BL.DTOs.SubmissionListItemDTO> ?? new List<PLDMS.BL.DTOs.SubmissionListItemDTO>();
+    var isPassed = submissions.Any(s => s.PassCount == s.TotalTests && s.TotalTests > 0);
+    var isSessionEnded = sessionEndDate.HasValue && sessionEndDate.Value < DateTime.UtcNow.AddHours(4);
+    var lastSubmittedCode = ViewBag.LastSubmittedCode as string;
+    var lastLanguageId = ViewBag.LastSubmittedLanguage as int?;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLDMS Workspace - @Model.Name</title>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script src="https://unpkg.com/@@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { red: '#E03C31', dark: '#141729', light: '#F9FAFB' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
+
+        /* Mini sidebar */
+        .mini-sidebar { width: 56px; transition: width 0.2s ease; }
+        .mini-sidebar .sidebar-label { display: none; }
+        .mini-sidebar:hover { width: 200px; }
+        .mini-sidebar:hover .sidebar-label { display: inline; }
+    </style>
+</head>
+<body class="bg-[#1e1e1e] text-gray-200 font-sans antialiased overflow-hidden h-screen">
+
+<div class="flex h-screen">
+
+    <!-- Mini Sidebar -->
+    <aside class="mini-sidebar bg-brand-dark flex flex-col shrink-0 z-20 border-r border-gray-800">
+        <!-- Logo -->
+        <div class="h-12 flex items-center justify-center border-b border-gray-700 px-2">
+            <span class="text-brand-red font-bold text-xs">PLDMS</span>
+            <span class="sidebar-label text-white text-xs font-semibold ml-1">Workspace</span>
+        </div>
+
+        <!-- Nav Items -->
+        <nav class="flex-1 flex flex-col gap-1 py-3 px-2">
+            @if (sessionId.HasValue)
+            {
+                <a href="@Url.Action("Details", "Session", new { area = "Student", id = sessionId })"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                   title="Back to Session">
+                    <i class="ph ph-arrow-left text-lg shrink-0"></i>
+                    <span class="sidebar-label text-sm font-medium whitespace-nowrap">Back to Session</span>
+                </a>
+            }
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Student" })"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+               title="Dashboard">
+                <i class="ph ph-squares-four text-lg shrink-0"></i>
+                <span class="sidebar-label text-sm font-medium whitespace-nowrap">Dashboard</span>
+            </a>
+            <a href="@Url.Action("Index", "Session", new { area = "Student" })"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+               title="Sessions">
+                <i class="ph ph-calendar text-lg shrink-0"></i>
+                <span class="sidebar-label text-sm font-medium whitespace-nowrap">Sessions</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+
+        <!-- Top Header Bar with countdown -->
+        <header class="h-12 bg-[#252526] border-b border-[#333] flex items-center justify-between px-4 shrink-0 z-10">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="flex items-center gap-2 text-gray-300 text-sm font-medium truncate">
+                    <i class="ph ph-file-code text-blue-400"></i>
+                    <span class="truncate">@sessionName</span>
+                    <i class="ph ph-caret-right text-gray-600 text-xs"></i>
+                    <span class="text-white font-semibold truncate">@Model.Name</span>
+                </div>
+                <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded border @diffColor shrink-0">
+                    @Model.Difficulty
+                </span>
+                <div class="flex items-center gap-1">
+                    @foreach (var lang in Model.Languages)
+                    {
+                        <span class="text-[10px] uppercase font-bold bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded">@lang</span>
+                    }
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                @if (sessionEndDate.HasValue)
+                {
+                    <div class="flex items-center gap-2 text-sm">
+                        <i class="ph ph-timer text-orange-400"></i>
+                        <span class="text-gray-400 font-medium" id="headerCountdown">--:--:--</span>
+                    </div>
+                }
+            </div>
+        </header>
+
+        <!-- Two-Column Workspace -->
+        <div class="flex-1 flex overflow-hidden">
+
+            <!-- Left: Instructions -->
+            <div class="w-[42%] flex flex-col border-r border-[#333] bg-[#1e1e1e]">
+                <!-- Instruction tabs -->
+                <div class="flex border-b border-[#333] bg-[#252526]">
+                    <button class="instruction-tab px-4 py-2.5 text-sm font-medium border-b-2 border-blue-500 text-white bg-[#1e1e1e]" data-panel="descPanel">
+                        <i class="ph ph-book-open mr-1"></i> Description
+                    </button>
+                    <button class="instruction-tab px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-300 transition-colors" data-panel="testPanel">
+                        <i class="ph ph-list-checks mr-1"></i> Test Cases (@Model.TestCases.Count())
+                    </button>
+                    <button class="instruction-tab px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-300 transition-colors" data-panel="historyPanel">
+                        <i class="ph ph-clock-counter-clockwise mr-1"></i> Submissions
+                    </button>
+                </div>
+
+                <!-- Description Panel -->
+                <div id="descPanel" class="instruction-panel flex-1 overflow-y-auto">
+                    <div class="p-6 prose prose-invert prose-sm max-w-none" id="markdownInstructionContainer">
+                        <div class="animate-pulse flex items-center gap-2 text-gray-500">
+                            <i class="ph ph-spinner animate-spin"></i> Rendering...
+                        </div>
+                    </div>
+                    <div class="hidden" id="rawMarkdownInstructions">@Model.Description</div>
+                </div>
+
+                <!-- Test Cases Panel (hidden by default) -->
+                <div id="testPanel" class="instruction-panel flex-1 overflow-y-auto hidden">
+                    <div class="divide-y divide-[#333]">
+                        @{
+                            var tcList = Model.TestCases.ToList();
+                        }
+                        @for (int i = 0; i < tcList.Count; i++)
+                        {
+                            var tc = tcList[i];
+                            <div class="p-4">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <i class="ph ph-circle text-gray-500" id="tc-icon-@i"></i>
+                                    <span class="text-sm font-semibold text-gray-300">Test Case @(i + 1)</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1 block">Input</label>
+                                        <pre class="bg-[#2d2d2d] p-3 rounded-lg text-gray-300 border border-[#444] text-xs font-mono whitespace-pre-wrap min-h-[50px]">@tc.Input</pre>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1 block">Expected</label>
+                                        <pre class="bg-[#2d2d2d] p-3 rounded-lg text-gray-300 border border-[#444] text-xs font-mono whitespace-pre-wrap min-h-[50px]">@tc.Output</pre>
+                                    </div>
+                                </div>
+                                <!-- Actual output (after execution) -->
+                                <div class="mt-3 hidden" id="tc-actual-container-@i">
+                                    <label class="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1 block">Actual Output</label>
+                                    <pre class="bg-[#2d2d2d] p-3 rounded-lg border border-[#444] text-xs font-mono whitespace-pre-wrap min-h-[50px]" id="tc-actual-@i"></pre>
+                                    <div class="mt-2 text-red-400 font-mono text-xs hidden" id="tc-error-@i"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Submissions Panel -->
+                <div id="historyPanel" class="instruction-panel flex-1 overflow-y-auto hidden">
+                    <table class="w-full text-xs text-left">
+                        <thead class="sticky top-0 bg-[#252526] text-gray-500 uppercase font-bold tracking-wider border-b border-[#333]">
+                            <tr>
+                                <th class="px-4 py-3">Time</th>
+                                <th class="px-4 py-3 text-center">Status</th>
+                                <th class="px-4 py-3 text-center">Tests</th>
+                                <th class="px-4 py-3">Lang</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#333]">
+                            @{
+                                var history = (ViewBag.Submissions as IEnumerable<SubmissionListItemDTO>) ?? [];
+                            }
+                            @if (history.Any())
+                            {
+                                foreach (var sub in history)
+                                {
+                                    <tr class="hover:bg-white/5 transition-colors">
+                                        <td class="px-4 py-3 text-gray-400">@sub.CreatedAt.ToString("HH:mm:ss") <br/><small>@sub.CreatedAt.ToString("MMM dd")</small></td>
+                                        <td class="px-4 py-3 text-center">
+                                            @if (sub.Success)
+                                            {
+                                                <span class="text-green-500 font-bold px-2 py-0.5 rounded bg-green-500/10 border border-green-500/20">Accepted</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-red-400 font-bold px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20">Failed</span>
+                                            }
+                                        </td>
+                                        <td class="px-4 py-3 text-center font-mono @(sub.Success ? "text-green-400":"text-gray-500")">
+                                            @sub.PassCount / @sub.TotalTests
+                                        </td>
+                                        <td class="px-4 py-3 text-gray-500 font-semibold">@sub.ProgrammingLanguage</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="px-4 py-12 text-center text-gray-500">
+                                        <i class="ph ph-mask-sad text-3xl mb-2 block"></i>
+                                        No submissions yet.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Right: Editor + Console -->
+            <div class="flex-1 flex flex-col bg-[#1e1e1e]">
+                <!-- Editor Header -->
+                <div class="px-4 py-2 border-b border-[#333] flex items-center justify-between bg-[#252526]">
+                    <div class="flex items-center gap-3">
+                        <select id="languageSelector" @(isPassed ? "disabled" : "") class="bg-[#3c3c3c] text-gray-200 text-xs px-2.5 py-1.5 rounded border border-[#555] outline-none focus:border-blue-500 transition-colors @(isPassed ? "opacity-75 cursor-not-allowed" : "")">
+                            @foreach (var lang in Model.Languages)
+                            {
+                                <option value="@((int)lang)" selected="@(lastLanguageId == (int)lang ? "selected" : null)">
+                                    @lang.ToString()
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        @if (isPassed)
+                        {
+                            <button disabled id="btnRunCode"
+                                    class="bg-gray-600 text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 cursor-not-allowed opacity-75">
+                                <i class="ph ph-play"></i> Run Tests
+                            </button>
+                            <button disabled id="btnSubmitCode"
+                                    class="bg-green-700 text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 cursor-not-allowed">
+                                <i class="ph ph-check-circle"></i> Passed
+                            </button>
+                        }
+                        else if (isSessionEnded)
+                        {
+                            <button disabled id="btnRunCode"
+                                    class="bg-gray-600 text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 cursor-not-allowed opacity-75"
+                                    title="Session has ended">
+                                <i class="ph ph-play"></i> Run Tests
+                            </button>
+                            <button disabled id="btnSubmitCode"
+                                    class="bg-gray-600 text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 cursor-not-allowed opacity-75"
+                                    title="Session has ended">
+                                <i class="ph ph-upload-simple"></i> Submit
+                            </button>
+                        }
+                        else
+                        {
+                            <button id="btnRunCode"
+                                    class="bg-[#3c3c3c] hover:bg-[#4a4a4a] text-gray-200 px-3 py-1.5 rounded text-xs font-semibold transition flex items-center gap-1.5 border border-[#555]">
+                                <i class="ph ph-play text-green-400"></i> Run Tests
+                            </button>
+                            <button id="btnSubmitCode"
+                                    class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+                                <i class="ph ph-upload-simple"></i> Submit
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Monaco Container -->
+                <div class="flex-1 relative" id="editorContainer"></div>
+
+                <!-- Console / Output -->
+                <div class="h-48 border-t border-[#333] bg-[#1e1e1e] flex flex-col" id="consolePanel">
+                    <div class="px-4 py-2 bg-[#2d2d2d] flex justify-between items-center text-xs font-semibold text-gray-400 tracking-wider border-b border-[#333]">
+                        <span class="flex items-center gap-2"><i class="ph ph-terminal-window"></i> OUTPUT</span>
+                        <span id="testsSummary" class="px-2 py-0.5 rounded"></span>
+                    </div>
+                    <div class="flex-1 p-4 overflow-y-auto" id="consoleOutput">
+                        <div id="testResultList" class="space-y-1">
+                            <div class="flex items-center gap-2 text-gray-600 text-xs italic">
+                                <i class="ph ph-info"></i> Run or Submit your code to see detailed results for all test cases.
+                            </div>
+                        </div>
+                    </div>
+                    <div id="executionLoadingOverlay" class="hidden h-full items-center justify-center text-gray-500 space-x-3 absolute inset-0 bg-[#1e1e1e]/90 z-10">
+                        <i class="ph ph-spinner animate-spin text-2xl"></i>
+                        <span>Evaluating...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="antiForgeryForm" method="post">
+    @Html.AntiForgeryToken()
+</form>
+<input type="hidden" id="hdnExerciseId" value="@Model.Id" />
+<input type="hidden" id="hdnGroupId" value="@groupId" />
+
+<!-- Markdown parser -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<!-- Monaco AMD Loader -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+
+<script>
+    var editor;
+    const isInitiallyPassed = @(isPassed.ToString().ToLower());
+    const isSessionEnded = @(isSessionEnded.ToString().ToLower());
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Countdown ---
+        var sessionEndDateStr = '@(sessionEndDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "")';
+        if (sessionEndDateStr) {
+            (function() {
+                var parts = sessionEndDateStr.split(/[- :]/);
+                var endTime = new Date(parts[0], parts[1]-1, parts[2], parts[3], parts[4], parts[5]).getTime();
+                var el = document.getElementById('headerCountdown');
+                if (!el) return;
+                function update() {
+                    var now = new Date().getTime();
+                    var diff = endTime - now;
+                    if (diff <= 0) { el.textContent = 'Time up!'; el.classList.add('text-red-400'); return; }
+                    var h = Math.floor(diff / 3600000);
+                    var m = Math.floor((diff % 3600000) / 60000);
+                    var s = Math.floor((diff % 60000) / 1000);
+                    
+                    var hh = h.toString().padStart(2, '0');
+                    var mm = m.toString().padStart(2, '0');
+                    var ss = s.toString().padStart(2, '0');
+                    el.textContent = hh + ':' + mm + ':' + ss;
+                }
+                update();
+                setInterval(update, 1000);
+            })();
+        }
+
+        // --- Markdown Rendering ---
+        const raw = document.getElementById('rawMarkdownInstructions').textContent;
+        const container = document.getElementById('markdownInstructionContainer');
+        container.innerHTML = marked.parse(raw);
+
+        // --- Instruction Tab Switching ---
+        document.querySelectorAll('.instruction-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.instruction-tab').forEach(t => {
+                    t.classList.remove('border-blue-500', 'text-white', 'bg-[#1e1e1e]');
+                    t.classList.add('border-transparent', 'text-gray-500');
+                });
+                document.querySelectorAll('.instruction-panel').forEach(p => p.classList.add('hidden'));
+                tab.classList.add('border-blue-500', 'text-white', 'bg-[#1e1e1e]');
+                tab.classList.remove('border-transparent', 'text-gray-500');
+                document.getElementById(tab.dataset.panel).classList.remove('hidden');
+            });
+        });
+
+        // --- Monaco Editor ---
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
+        require(['vs/editor/editor.main'], function() {
+            const langMap = {
+                @foreach (var lang in Enum.GetValues<PLDMS.Core.Enums.ProgrammingLanguage>())
+                {
+                    var monacoName = lang.ToString().ToLower() switch
+                    {
+                        "c"          => "c",
+                        "javascript" => "javascript",
+                        "java"       => "java",
+                        "python"     => "python",
+                        _            => "plaintext"
+                    };
+                    @:@((int)lang): '@monacoName',
+                }
+            };
+
+            const selector = document.getElementById('languageSelector');
+
+            const templates = {
+                @((int)PLDMS.Core.Enums.ProgrammingLanguage.C): `#include <stdio.h>
+
+int main() {
+    int a, b;
+    scanf("%d %d", &a, &b);
+    printf("%d %d", a, b);
+    return 0;
+}`,
+                @((int)PLDMS.Core.Enums.ProgrammingLanguage.JavaScript): `const input = require('fs').readFileSync(0, 'utf-8').trim().split(/\s+/);
+const a = parseInt(input[0], 10);
+const b = parseInt(input[1], 10);
+console.log(a + " " + b);`,
+                @((int)PLDMS.Core.Enums.ProgrammingLanguage.Java): `import java.io.*;
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        String[] parts = br.readLine().trim().split("\\s+");
+        int a = Integer.parseInt(parts[0]);
+        int b = Integer.parseInt(parts[1]);
+        System.out.println(a + " " + b);
+    }
+}`,
+                @((int)PLDMS.Core.Enums.ProgrammingLanguage.Python): `import sys
+a, b = map(int, sys.stdin.readline().split())
+print(a, b)`
+            };
+
+            const lastSubmittedCode = `@Html.Raw(lastSubmittedCode?.Replace("\\", "\\\\").Replace("`", "\\`").Replace("$", "\\$") ?? "")`;
+
+            function getTemplate() {
+                const langId = parseInt(selector.value, 10);
+                const monacoLang = langMap[langId] || 'plaintext';
+
+                if (lastSubmittedCode && (!selector.dataset.changed || selector.value == "@lastLanguageId")) {
+                    return { lang: monacoLang, code: lastSubmittedCode };
+                }
+
+                return { lang: monacoLang, code: templates[langId] || '// Write your code here\n' };
+            }
+
+            const initial = getTemplate();
+            editor = monaco.editor.create(document.getElementById('editorContainer'), {
+                value: initial.code,
+                language: initial.lang,
+                theme: 'vs-dark',
+                automaticLayout: true,
+                fontSize: 14,
+                minimap: { enabled: false },
+                padding: { top: 16 },
+                scrollBeyondLastLine: false,
+                renderLineHighlight: 'gutter',
+                cursorBlinking: 'smooth',
+                readOnly: isInitiallyPassed || isSessionEnded
+            });
+
+            selector.addEventListener('change', function() {
+                selector.dataset.changed = "true";
+                const t = getTemplate();
+                monaco.editor.setModelLanguage(editor.getModel(), t.lang);
+                editor.setValue(t.code);
+            });
+        });
+    });
+
+    // --- Execution Engine ---
+    async function executeCode(isSubmission, btnElement) {
+        const originalHtml = btnElement.innerHTML;
+        const sourceCode = editor.getValue();
+        const languageId = document.getElementById('languageSelector').value;
+        const exerciseId = document.getElementById('hdnExerciseId').value;
+        const groupId = document.getElementById('hdnGroupId').value;
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        if (!sourceCode.trim()) { alert("Source code cannot be empty!"); return; }
+
+        btnElement.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Running...';
+        btnElement.disabled = true;
+
+        const summarySpan = document.getElementById('testsSummary');
+        const consoleOut = document.getElementById('consoleOutput');
+        const loadingOverlay = document.getElementById('executionLoadingOverlay');
+
+        loadingOverlay.classList.remove('hidden');
+        loadingOverlay.classList.add('flex');
+        summarySpan.textContent = '';
+
+        // Reset icons
+        const totalCases = @Model.TestCases.Count();
+        for (let i = 0; i < totalCases; i++) {
+            const icon = document.getElementById(`tc-icon-${i}`);
+            if (icon) icon.className = 'ph ph-circle text-gray-500';
+            const actualContainer = document.getElementById(`tc-actual-container-${i}`);
+            const actualText = document.getElementById(`tc-actual-${i}`);
+            const errorText = document.getElementById(`tc-error-${i}`);
+            if (actualContainer) {
+                actualContainer.classList.add('hidden');
+                actualText.textContent = '';
+                actualText.className = 'bg-[#2d2d2d] p-3 rounded-lg border border-[#444] text-xs font-mono whitespace-pre-wrap min-h-[50px]';
+                errorText.classList.add('hidden');
+                errorText.textContent = '';
+            }
+        }
+
+        const endpointUrl = isSubmission
+            ? '@Url.Action("SubmitCode", "Exercise", new { area = "Student" })'
+            : '@Url.Action("RunCode", "Exercise", new { area = "Student" })';
+
+        try {
+            const response = await fetch(endpointUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+                body: JSON.stringify({ GroupId: groupId, ExerciseId: exerciseId, LanguageId: parseInt(languageId), SourceCode: sourceCode })
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(`Execution Failed: ${data.Message || 'Unknown error'}`);
+                return;
+            }
+
+            // Summary
+            summarySpan.textContent = `${data.passedTests} / ${data.totalTests} Passed`;
+            summarySpan.className = data.success
+                ? 'px-2 py-0.5 rounded font-bold bg-green-900/50 text-green-400'
+                : 'px-2 py-0.5 rounded font-bold bg-red-900/50 text-red-400';
+
+            // Build dynamic results list
+            const resultList = document.getElementById('testResultList');
+            resultList.innerHTML = '';
+            
+            data.testResults.forEach(tc => {
+                const passed = tc.passed;
+                const statusColor = passed ? 'text-green-500' : 'text-red-500';
+                const statusIcon = passed ? 'ph-check-circle' : 'ph-x-circle';
+                
+                let resultRow = `
+                    <div class="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5 mb-1 text-[11px]">
+                        <div class="flex items-center gap-2">
+                           <i class="ph ${statusIcon} ${statusColor} text-sm"></i>
+                           <span class="font-medium text-gray-300">Test #${tc.testCaseIndex}</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-right">
+                            <span class="${statusColor} font-bold px-1.5 py-0.5 rounded bg-white/5 uppercase text-[9px] tracking-widest leading-none">${passed ? 'Passed' : (tc.errorMessage || 'Failed')}</span>
+                        </div>
+                    </div>
+                `;
+                resultList.insertAdjacentHTML('beforeend', resultRow);
+
+                // Update static example test icons
+                const idx = tc.testCaseIndex - 1;
+                const icon = document.getElementById(`tc-icon-${idx}`);
+                if (icon) icon.className = `ph ${statusIcon} ${statusColor}`;
+
+                if (tc.isExample) {
+                    const actualContainer = document.getElementById(`tc-actual-container-${idx}`);
+                    const actualText = document.getElementById(`tc-actual-${idx}`);
+                    const errorText = document.getElementById(`tc-error-${idx}`);
+                    
+                    if (actualContainer && actualText) {
+                        actualContainer.classList.remove('hidden');
+                        actualText.textContent = tc.actualOutput || '(Empty Output)';
+                        if (passed) {
+                            actualText.classList.add('border-green-600', 'text-green-300');
+                        } else {
+                            actualText.classList.add('border-red-600', 'text-red-300');
+                            if (tc.errorMessage) { errorText.classList.remove('hidden'); errorText.textContent = tc.errorMessage; }
+                        }
+                    }
+                }
+            });
+
+            // Switch to test cases tab to show results
+            document.querySelector('.instruction-tab[data-panel="testPanel"]').click();
+
+            if (isSubmission) {
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
+
+        } catch (err) {
+            alert("Critical execution failure. See browser console.");
+            console.error(err);
+        } finally {
+            loadingOverlay.classList.remove('flex');
+            loadingOverlay.classList.add('hidden');
+            btnElement.innerHTML = originalHtml;
+            btnElement.disabled = false;
+        }
+    }
+
+    const btnRunCode = document.getElementById('btnRunCode');
+    const btnSubmitCode = document.getElementById('btnSubmitCode');
+    
+    if (btnRunCode && !isInitiallyPassed) {
+        btnRunCode.addEventListener('click', function() { executeCode(false, this); });
+    }
+    if (btnSubmitCode && !isInitiallyPassed) {
+        btnSubmitCode.addEventListener('click', function() {
+            if (confirm('Are you ready to submit this solution for grading?')) executeCode(true, this);
+        });
+    }
+</script>
+</body>
+</html>

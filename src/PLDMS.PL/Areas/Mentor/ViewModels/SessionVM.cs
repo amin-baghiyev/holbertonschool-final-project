@@ -11,4 +11,6 @@ public record SessionVM
     public int PageSize { get; set; }
     public string? Search { get; set; }
     public SessionStatus? Status { get; set; }
+    public int? CohortId { get; set; }
+    public int? ProgramId { get; set; }
 }

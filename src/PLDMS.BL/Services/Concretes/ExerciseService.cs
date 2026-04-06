@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PLDMS.BL.Common;
 using PLDMS.BL.DTOs;
@@ -34,10 +34,10 @@ public class ExerciseService : IExerciseService
     {
         Expression<Func<Exercise, bool>> predicate = e =>
             (!onlyActive || !e.IsDeleted) &&
-            (string.IsNullOrWhiteSpace(q) || e.Name.Contains(q)) &&
-            (programs == null || programs.Count != 0 || programs.Contains(e.ProgramId)) &&
+            (string.IsNullOrWhiteSpace(q) || e.Name.ToLower().Contains(q.ToLower())) &&
+            (programs == null || programs.Count == 0 || programs.Contains(e.ProgramId)) &&
             (difficulty == null || e.Difficulty == difficulty) &&
-            (languages == null || languages.Count != 0 || e.ExerciseLanguages.Any(el => languages.Contains(el.ProgrammingLanguage)));
+            (languages == null || languages.Count == 0 || e.ExerciseLanguages.Any(el => languages.Contains(el.ProgrammingLanguage)));
 
         var (items, totalCount) = await _exerciseRepository.GetAllAsync(
             predicate: predicate,
@@ -55,7 +55,7 @@ public class ExerciseService : IExerciseService
     {
         Expression<Func<Exercise, bool>> predicate = e =>
             !e.IsDeleted &&
-            (string.IsNullOrWhiteSpace(q) || e.Name.Contains(q));
+            (string.IsNullOrWhiteSpace(q) || e.Name.ToLower().Contains(q.ToLower()));
 
         var (items, _) = await _exerciseRepository.GetAllAsync(
             predicate: predicate,
@@ -75,6 +75,23 @@ public class ExerciseService : IExerciseService
         ) ?? throw new BaseException($"Exercise with ID {id} was not found");
 
         return _mapper.Map<ExerciseDetailDTO>(exercise);
+    }
+
+    public async Task<ExerciseFormDTO> ExerciseByIdForStudentAsync(long id)
+    {
+        var exercise = await _exerciseRepository.GetOneAsync(
+            predicate: e => e.Id == id && !e.IsDeleted,
+            includes: query => query.Include(e => e.TestCases)
+                                    .Include(e => e.ExerciseLanguages)
+        ) ?? throw new BaseException($"Exercise with ID {id} was not found");
+
+        var dto = _mapper.Map<ExerciseFormDTO>(exercise);
+        dto.TestCases = exercise.TestCases
+            .Where(tc => tc.IsExample && !tc.IsDeleted)
+            .Select(tc => _mapper.Map<ExerciseTestCasesDTO>(tc))
+            .ToList();
+
+        return dto;
     }
 
     public async Task<ExerciseFormDTO> ExerciseByIdForEditAsync(long id)
@@ -143,13 +160,22 @@ public class ExerciseService : IExerciseService
             exercise.TestCases.Remove(tc);
         }
 
+        // Update IsExample flag for existing test cases
+        foreach (var dtoTc in incomingTestCases)
+        {
+            var dbTc = exercise.TestCases.FirstOrDefault(t => t.Input == dtoTc.Input && t.Output == dtoTc.Output);
+            if (dbTc != null)
+            {
+                dbTc.IsExample = dtoTc.IsExample;
+            }
+        }
+
         var testCasesToAdd = incomingTestCases
             .Where(dtoTc => !exercise.TestCases.Any(dbTc => dbTc.Input == dtoTc.Input && dbTc.Output == dtoTc.Output))
             .ToList();
-
         foreach (var tc in testCasesToAdd)
         {
-            exercise.TestCases.Add(new TestCase { Input = tc.Input, Output = tc.Output });
+            exercise.TestCases.Add(new TestCase { Input = tc.Input, Output = tc.Output, IsExample = tc.IsExample });
         }
 
         _exerciseRepository.Update(exercise);

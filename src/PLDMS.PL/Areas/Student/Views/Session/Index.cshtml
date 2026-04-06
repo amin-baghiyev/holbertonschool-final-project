@@ -1,10 +1,23 @@
 @model ICollection<StudentSessionListItemDTO>
+@using PLDMS.Core.Enums
 
 @{
     ViewData["Title"] = "My Sessions";
     var currentPage = ViewBag.CurrentPage as int? ?? 1;
-    var totalPages = ViewBag.TotalPages as int? ?? 1;
-    var totalCount = ViewBag.TotalCount as int? ?? 0;
+    var totalPages  = ViewBag.TotalPages  as int? ?? 1;
+    var totalCount  = ViewBag.TotalCount  as int? ?? 0;
+    int pageSize    = ViewBag.PageSize    as int? ?? 10;
+
+    var startItem = totalCount == 0 ? 0 : (currentPage - 1) * pageSize + 1;
+    var endItem   = Math.Min(currentPage * pageSize, totalCount);
+
+    var statusParam   = Context.Request.Query["status"].ToString();
+    var qParam        = Context.Request.Query["q"].ToString();
+    var cohortParam   = Context.Request.Query["cohortId"].ToString();
+    var programParam  = Context.Request.Query["programId"].ToString();
+    var pageSizeParam = Context.Request.Query["pageSize"].ToString();
+    var hasSearch     = !string.IsNullOrWhiteSpace(statusParam) || !string.IsNullOrWhiteSpace(qParam)
+                     || !string.IsNullOrWhiteSpace(cohortParam) || !string.IsNullOrWhiteSpace(programParam);
 }
 
 <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0">
@@ -15,23 +28,50 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 shrink-0">
         <div>
             <h2 class="text-lg font-semibold text-gray-900">Assigned Sessions</h2>
-            <p class="text-sm text-gray-500">View your assigned educational sessions.</p>
+            <p class="text-sm text-gray-500">View your assigned sessions.</p>
         </div>
 
         <div class="flex gap-3">
-            <form asp-action="Index" method="get" class="flex flex-wrap gap-3 items-center">
-                <select name="status" class="bg-white border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-red-400">
-                    <option value="">Status: All</option>
-                    <option value="Upcoming">Upcoming</option>
-                    <option value="Active">Active</option>
-                    <option value="Finished">Finished</option>
-                </select>
-                <div class="flex items-center bg-white border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-red-400 transition-all">
-                    <i class="ph ph-magnifying-glass text-gray-400 mr-2"></i>
-                    <input type="text" name="q" placeholder="Search by name..." class="outline-none text-sm w-40 md:w-56 bg-transparent">
+            <form asp-action="Index" method="get" class="flex flex-wrap gap-4 items-end">
+
+                <div class="flex flex-col">
+                    <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Status</label>
+                    <select name="status" class="bg-white border rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand-red/20 transition-all min-w-[130px]">
+                        <option value="">All Statuses</option>
+                        <option value="Upcoming" selected="@(statusParam == "Upcoming")">Upcoming</option>
+                        <option value="Active"   selected="@(statusParam == "Active")">Active</option>
+                        <option value="Finished" selected="@(statusParam == "Finished")">Finished</option>
+                    </select>
                 </div>
-                <button type="submit" class="bg-red-600 hover:bg-red-700 py-2.5 px-4 rounded-lg transition-all shadow-sm text-white">
-                    <i class="ph ph-magnifying-glass text-lg"></i>
+
+                <div class="flex flex-col">
+                    <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Program</label>
+                    <select name="programId" class="bg-white border rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand-red/20 transition-all min-w-[130px]" asp-items="ViewBag.Programs">
+                        <option value="">All Programs</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col">
+                    <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Cohort</label>
+                    <select name="cohortId" class="bg-white border rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand-red/20 transition-all min-w-[130px]" asp-items="ViewBag.Cohorts">
+                        <option value="">All Cohorts</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col">
+                    <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Search</label>
+                    <div class="flex items-center bg-white border rounded-lg px-3 py-2.5 focus-within:ring-2 focus-within:ring-brand-red/20 transition-all">
+                        <i class="ph ph-magnifying-glass text-gray-400 mr-2"></i>
+                        <input type="text" name="q" value="@qParam" placeholder="Search by name..." class="outline-none text-sm w-36 md:w-48 bg-transparent">
+                        @if (hasSearch)
+                        {
+                            <a asp-action="Index" class="ml-2 text-gray-400 hover:text-brand-red"><i class="ph ph-x-circle"></i></a>
+                        }
+                    </div>
+                </div>
+
+                <button type="submit" class="bg-brand-red hover:bg-red-700 py-2.5 px-4 rounded-lg transition-all shadow-sm">
+                    <i class="ph ph-magnifying-glass text-white text-lg"></i>
                 </button>
             </form>
         </div>
@@ -43,8 +83,12 @@
                 <thead class="sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_0_#e5e7eb]">
                     <tr class="text-sm font-semibold text-gray-600">
                         <th class="px-6 py-4">Session Name</th>
-                        <th class="px-6 py-4">Status</th>
+                        <th class="px-6 py-4">Cohort / Program</th>
                         <th class="px-6 py-4">Time Range</th>
+                        <th class="px-6 py-4">Group</th>
+                        <th class="px-6 py-4">Status</th>
+                        <th class="px-6 py-4">Progress</th>
+                        <th class="px-6 py-4 text-center">Access</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y text-sm bg-white divide-gray-200">
@@ -55,19 +99,73 @@
                             var statusColor = item.SessionStatus switch
                             {
                                 SessionStatus.Upcoming => "bg-yellow-100 text-yellow-700",
-                                SessionStatus.Active => "bg-green-100 text-green-700",
+                                SessionStatus.Active   => "bg-green-100 text-green-700",
                                 SessionStatus.Finished => "bg-gray-100 text-gray-700",
-                                _ => "bg-gray-100 text-gray-700"
+                                _                      => "bg-gray-100 text-gray-700"
                             };
 
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 font-medium text-gray-900">@item.Name</td>
+                            var canAccess = item.SessionStatus != SessionStatus.Upcoming;
+                            var progressPercent = item.ExercisesCount > 0 ? (int)((double)item.SolvedExercisesCount / item.ExercisesCount * 100) : 0;
+
+                            <tr class="hover:bg-gray-50 transition-colors @(canAccess ? "cursor-pointer" : "")"
+                                @(canAccess ? $"onclick=\"window.location.href='{Url.Action("Details", new { id = item.Id })}'\"" : "")>
+                                <td class="px-6 py-4 font-medium text-gray-900">
+                                    @if (canAccess)
+                                    {
+                                        <a asp-action="Details" asp-route-id="@item.Id"
+                                           class="text-brand-red hover:underline hover:text-red-700 transition-colors">
+                                            @item.Name
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-500">@item.Name</span>
+                                    }
+                                </td>
                                 <td class="px-6 py-4">
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-medium @statusColor">@item.SessionStatus</span>
+                                    <div class="text-gray-900 font-medium">@item.CohortName</div>
+                                    <div class="text-xs text-gray-500">@item.ProgramName</div>
                                 </td>
                                 <td class="px-6 py-4 text-gray-600">
-                                    <div>@item.StartDate.ToString("dd MMM yyyy HH:mm")</div>
-                                    <div class="text-xs text-gray-400">to @item.EndDate.ToString("dd MMM yyyy HH:mm")</div>
+                                    <div>@item.StartDate.ToString("MMM dd, yyyy")</div>
+                                    <div class="text-xs text-gray-400">@item.StartDate.ToString("HH:mm") to @item.EndDate.ToString("HH:mm")</div>
+                                </td>
+                                <td class="px-6 py-4 text-gray-600">
+                                    <div class="font-medium">@item.GroupName</div>
+                                    <div class="text-xs text-gray-400 flex items-center gap-1">
+                                        <i class="ph ph-users"></i> @item.GroupStudentCount members
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-medium @statusColor">
+                                        @item.SessionStatus
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-gray-600">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="font-bold text-gray-900">@item.SolvedExercisesCount/@item.ExercisesCount</span>
+                                        <span class="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">Solved</span>
+                                    </div>
+                                    <div class="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-green-500 transition-all rounded-full" style="width: @(progressPercent)%"></div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    @if (canAccess)
+                                    {
+                                        <a asp-action="Details" asp-route-id="@item.Id"
+                                           class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-brand-red hover:bg-red-50 transition-colors"
+                                           title="Open session">
+                                            <i class="ph ph-arrow-square-out text-lg"></i>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-300 cursor-not-allowed"
+                                              title="Session not started yet">
+                                            <i class="ph ph-lock text-lg"></i>
+                                        </span>
+                                    }
                                 </td>
                             </tr>
                         }
@@ -75,28 +173,91 @@
                     else
                     {
                         <tr>
-                            <td colspan="3" class="py-12 text-center bg-gray-50 border border-dashed rounded-xl m-4">
+                            <td colspan="6" class="py-12 text-center">
                                 <div class="flex justify-center mb-2"><i class="ph ph-calendar-blank text-4xl text-gray-300"></i></div>
-                                <p class="text-gray-500">No sessions found matching your criteria.</p>
+                                <p class="text-gray-500">
+                                    @(hasSearch ? "No sessions found matching your filters." : "No sessions assigned to you yet.")
+                                </p>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination — same pattern as Mentor/Admin pages -->
         <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-white shrink-0">
-            <div class="text-sm text-gray-500">
-                Total Results: <span class="font-medium text-gray-900">@totalCount</span>
+
+            <div class="flex items-center gap-6">
+                <div class="hidden sm:block text-sm text-gray-500">
+                    Showing
+                    <span class="font-medium text-gray-900">@startItem</span>
+                    -
+                    <span class="font-medium text-gray-900">@endItem</span>
+                    of
+                    <span class="font-medium text-gray-900">@totalCount</span>
+                    results
+                </div>
+
+                <form method="get" asp-action="Index" class="flex items-center gap-2 text-sm">
+                    <input type="hidden" name="q" value="@qParam" />
+                    <input type="hidden" name="status" value="@statusParam" />
+                    <input type="hidden" name="cohortId" value="@cohortParam" />
+                    <input type="hidden" name="programId" value="@programParam" />
+                    <input type="hidden" name="page" value="1" />
+
+                    <span class="text-gray-500">Show</span>
+                    <select name="pageSize"
+                            onchange="this.form.submit()"
+                            class="border border-gray-200 rounded-lg px-2 py-1 text-gray-700 focus:outline-none focus:ring-1 focus:ring-red-400">
+                        <option value="5" selected="@(pageSize == 5)">5</option>
+                        <option value="10" selected="@(pageSize == 10)">10</option>
+                        <option value="15" selected="@(pageSize == 15)">15</option>
+                        <option value="20" selected="@(pageSize == 20)">20</option>
+                        <option value="25" selected="@(pageSize == 25)">25</option>
+                    </select>
+                    <span class="text-gray-500">per page</span>
+                </form>
             </div>
+
             <div class="flex gap-2">
-                @if (currentPage > 1)
-                {
-                    <a asp-action="Index" asp-route-page="@(currentPage - 1)" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">Previous</a>
-                }
-                @if (currentPage < totalPages)
-                {
-                    <a asp-action="Index" asp-route-page="@(currentPage + 1)" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">Next</a>
-                }
+                <a asp-action="Index"
+                   asp-route-q="@qParam"
+                   asp-route-status="@statusParam"
+                   asp-route-cohortId="@cohortParam"
+                   asp-route-programId="@programParam"
+                   asp-route-page="@(currentPage - 1)"
+                   asp-route-pageSize="@pageSize"
+                   class="px-3 py-1.5 border rounded-lg text-sm font-medium @(currentPage == 1 ? "border-gray-200 text-gray-400 bg-gray-50 pointer-events-none" : "border-gray-200 text-gray-600 hover:bg-gray-50")">
+                    Previous
+                </a>
+
+                <div class="hidden sm:flex gap-1">
+                    @for (var i = 1; i <= totalPages; i++)
+                    {
+                        <a asp-action="Index"
+                           asp-route-q="@qParam"
+                           asp-route-status="@statusParam"
+                           asp-route-cohortId="@cohortParam"
+                           asp-route-programId="@programParam"
+                           asp-route-page="@i"
+                           asp-route-pageSize="@pageSize"
+                           class="px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors @(i == currentPage ? "border-red-200 bg-red-50 text-red-600" : "border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900")">
+                            @i
+                        </a>
+                    }
+                </div>
+
+                <a asp-action="Index"
+                   asp-route-q="@qParam"
+                   asp-route-status="@statusParam"
+                   asp-route-cohortId="@cohortParam"
+                   asp-route-programId="@programParam"
+                   asp-route-page="@(currentPage + 1)"
+                   asp-route-pageSize="@pageSize"
+                   class="px-3 py-1.5 border rounded-lg text-sm font-medium @(currentPage >= totalPages ? "border-gray-200 text-gray-400 bg-gray-50 pointer-events-none" : "border-gray-200 text-gray-600 hover:bg-gray-50")">
+                    Next
+                </a>
             </div>
         </div>
     </div>
