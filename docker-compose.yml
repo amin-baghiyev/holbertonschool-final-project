@@ -1,0 +1,46 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pldms-app
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__PostgreSQL=Host=db;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+      - GitHub__Token=${GITHUB_TOKEN}
+      - SeedUsers__Admin__Email=${ADMIN_EMAIL}
+      - SeedUsers__Admin__Password=${ADMIN_PASSWORD}
+      - SeedUsers__Admin__FullName=${ADMIN_FULLNAME}
+      - EmailSettings__SmtpServer=${SMTP_SERVER}
+      - EmailSettings__SmtpPort=${SMTP_PORT}
+      - EmailSettings__SenderEmail=${SENDER_EMAIL}
+      - EmailSettings__SenderName=${SENDER_NAME}
+      - EmailSettings__AppPassword=${APP_PASSWORD}
+    depends_on:
+      - db
+    networks:
+      - pldms-network
+
+  db:
+    image: postgres:18
+    container_name: pldms-db
+    restart: always
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - pldms_postgres_data:/var/lib/postgresql/data
+    networks:
+      - pldms-network
+
+networks:
+  pldms-network:
+    driver: bridge
+
+volumes:
+  pldms_postgres_data:
