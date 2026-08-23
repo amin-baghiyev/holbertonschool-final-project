@@ -2,6 +2,6 @@
 
 public record StudentListItemDTO
 {
-    public Guid Id { get; set; }
-    public string FullName { get; set; } = null!;
+	public Guid Id { get; set; }
+	public string FullName { get; set; } = null!;
 }

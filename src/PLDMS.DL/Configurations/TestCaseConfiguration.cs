@@ -6,20 +6,20 @@ namespace PLDMS.DL.Configurations;
 
 public class TestCaseConfiguration : IEntityTypeConfiguration<TestCase>
 {
-    public void Configure(EntityTypeBuilder<TestCase> builder)
-    {
-        builder.Property(tc => tc.Input)
-            .IsRequired();
+	public void Configure(EntityTypeBuilder<TestCase> builder)
+	{
+		builder.Property(tc => tc.Input)
+			.IsRequired();
 
-        builder.Property(tc => tc.Output)
-            .IsRequired();
+		builder.Property(tc => tc.Output)
+			.IsRequired();
 
-        builder.Property(tc => tc.IsDeleted)
-            .HasDefaultValue(false);
+		builder.Property(tc => tc.IsDeleted)
+			.HasDefaultValue(false);
 
-        builder.HasOne(tc => tc.Exercise)
-            .WithMany(t => t.TestCases)
-            .HasForeignKey(tc => tc.ExerciseId)
-            .OnDelete(DeleteBehavior.Cascade);
-    }
+		builder.HasOne(tc => tc.Exercise)
+			.WithMany(t => t.TestCases)
+			.HasForeignKey(tc => tc.ExerciseId)
+			.OnDelete(DeleteBehavior.Cascade);
+	}
 }

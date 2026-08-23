@@ -13,103 +13,103 @@ namespace PLDMS.PL.Areas.Student.Controllers;
 [Authorize(Roles = "Student")]
 public class ExerciseController : Controller
 {
-    private readonly IExerciseService _exerciseService;
-    private readonly ISubmissionService _submissionService;
-    private readonly IRepository<Group> _groupRepository;
+	private readonly IExerciseService _exerciseService;
+	private readonly ISubmissionService _submissionService;
+	private readonly IRepository<Group> _groupRepository;
 
-    public ExerciseController(IExerciseService exerciseService, ISubmissionService submissionService, IRepository<Group> groupRepository)
-    {
-        _exerciseService = exerciseService;
-        _submissionService = submissionService;
-        _groupRepository = groupRepository;
-    }
+	public ExerciseController(IExerciseService exerciseService, ISubmissionService submissionService, IRepository<Group> groupRepository)
+	{
+		_exerciseService = exerciseService;
+		_submissionService = submissionService;
+		_groupRepository = groupRepository;
+	}
 
-    [HttpGet]
-    public async Task<IActionResult> Details(long exerciseId, Guid groupId)
-    {
-        var dto = await _exerciseService.ExerciseByIdForStudentAsync(exerciseId);
-        
-        ViewBag.GroupId = groupId;
+	[HttpGet]
+	public async Task<IActionResult> Details(long exerciseId, Guid groupId)
+	{
+		var dto = await _exerciseService.ExerciseByIdForStudentAsync(exerciseId);
 
-        // Load session info for header countdown
-        var group = await _groupRepository.GetOneAsync(
-            predicate: g => g.Id == groupId,
-            includes: q => q.Include(g => g.Session),
-            isTracking: false);
+		ViewBag.GroupId = groupId;
 
-        if (group?.Session != null)
-        {
-            ViewBag.SessionName = group.Session.Name;
-            ViewBag.SessionEndDate = group.Session.EndDate;
-            ViewBag.SessionId = group.Session.Id;
-        }
+		// Load session info for header countdown
+		var group = await _groupRepository.GetOneAsync(
+			predicate: g => g.Id == groupId,
+			includes: q => q.Include(g => g.Session),
+			isTracking: false);
 
-        ViewBag.Submissions = await _submissionService.GetSubmissionsByGroupAsync(groupId, exerciseId);
-        
-        var lastCode = await _submissionService.GetLastSubmittedCodeAsync(groupId, exerciseId);
-        ViewBag.LastSubmittedCode = lastCode;
+		if (group?.Session != null)
+		{
+			ViewBag.SessionName = group.Session.Name;
+			ViewBag.SessionEndDate = group.Session.EndDate;
+			ViewBag.SessionId = group.Session.Id;
+		}
 
-        if (!string.IsNullOrEmpty(lastCode))
-        {
-            var submissions = (IEnumerable<PLDMS.BL.DTOs.SubmissionListItemDTO>)ViewBag.Submissions;
-            var latest = submissions.FirstOrDefault();
-            if (latest != null)
-            {
-                ViewBag.LastSubmittedLanguage = (int)latest.ProgrammingLanguage;
-            }
-        }
+		ViewBag.Submissions = await _submissionService.GetSubmissionsByGroupAsync(groupId, exerciseId);
 
-        return View(dto);
-    }
+		var lastCode = await _submissionService.GetLastSubmittedCodeAsync(groupId, exerciseId);
+		ViewBag.LastSubmittedCode = lastCode;
 
-    [HttpGet]
-    public async Task<IActionResult> GetTestCases(long id)
-    {
-        var exercise = await _exerciseService.ExerciseByIdForStudentAsync(id);
-        return Json(exercise.TestCases);
-    }
+		if (!string.IsNullOrEmpty(lastCode))
+		{
+			var submissions = (IEnumerable<PLDMS.BL.DTOs.SubmissionListItemDTO>)ViewBag.Submissions;
+			var latest = submissions.FirstOrDefault();
+			if (latest != null)
+			{
+				ViewBag.LastSubmittedLanguage = (int)latest.ProgrammingLanguage;
+			}
+		}
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SubmitCode([FromBody] CodeSubmissionDTO dto)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+		return View(dto);
+	}
 
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var studentId))
-            return RedirectToAction("Index", "Dashboard");
+	[HttpGet]
+	public async Task<IActionResult> GetTestCases(long id)
+	{
+		var exercise = await _exerciseService.ExerciseByIdForStudentAsync(id);
+		return Json(exercise.TestCases);
+	}
 
-        try
-        {
-            var result = await _submissionService.SubmitCodeAsync(studentId, dto);
-            return Json(result);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { Message = ex.Message });
-        }
-    }
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> SubmitCode([FromBody] CodeSubmissionDTO dto)
+	{
+		if (!ModelState.IsValid)
+			return BadRequest(ModelState);
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RunCode([FromBody] CodeSubmissionDTO dto)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+		var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var studentId))
+			return RedirectToAction("Index", "Dashboard");
 
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var studentId))
-            return RedirectToAction("Index", "Dashboard");
+		try
+		{
+			var result = await _submissionService.SubmitCodeAsync(studentId, dto);
+			return Json(result);
+		}
+		catch (Exception ex)
+		{
+			return BadRequest(new { Message = ex.Message });
+		}
+	}
 
-        try
-        {
-            var result = await _submissionService.RunCodeAsync(studentId, dto);
-            return Json(result);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { Message = ex.Message });
-        }
-    }
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> RunCode([FromBody] CodeSubmissionDTO dto)
+	{
+		if (!ModelState.IsValid)
+			return BadRequest(ModelState);
+
+		var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var studentId))
+			return RedirectToAction("Index", "Dashboard");
+
+		try
+		{
+			var result = await _submissionService.RunCodeAsync(studentId, dto);
+			return Json(result);
+		}
+		catch (Exception ex)
+		{
+			return BadRequest(new { Message = ex.Message });
+		}
+	}
 }

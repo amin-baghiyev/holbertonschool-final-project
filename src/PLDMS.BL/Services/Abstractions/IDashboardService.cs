@@ -4,5 +4,5 @@ namespace PLDMS.BL.Services.Abstractions;
 
 public interface IDashboardService
 {
-    Task<AdminDashboardStatsDTO> AdminDashboardStatsAsync();
+	Task<AdminDashboardStatsDTO> AdminDashboardStatsAsync();
 }

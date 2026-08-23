@@ -10,83 +10,83 @@ namespace PLDMS.PL.Areas.Admin.Controllers;
 [Authorize(Roles = "Admin")]
 public class StudentController : Controller
 {
-    private readonly IStudentService _studentService;
+	private readonly IStudentService _studentService;
 
-    public StudentController(IStudentService studentService)
-    {
-        _studentService = studentService;
-    }
+	public StudentController(IStudentService studentService)
+	{
+		_studentService = studentService;
+	}
 
-    [HttpGet]
-    public async Task<IActionResult> Index(string? q, bool onlyActive = true, int page = 0, int pageSize = 10)
-    {
-        pageSize = pageSize switch
-        {
-            5 => 5,
-            10 => 10,
-            15 => 15,
-            20 => 20,
-            _ => 10
-        };
+	[HttpGet]
+	public async Task<IActionResult> Index(string? q, bool onlyActive = true, int page = 0, int pageSize = 10)
+	{
+		pageSize = pageSize switch
+		{
+			5 => 5,
+			10 => 10,
+			15 => 15,
+			20 => 20,
+			_ => 10
+		};
 
-        var (students, totalCount) = await _studentService.StudentsAsTableItemAsync(q ?? "", onlyActive, page, pageSize);
+		var (students, totalCount) = await _studentService.StudentsAsTableItemAsync(q ?? "", onlyActive, page, pageSize);
 
-        var vm = new StudentVM
-        {
-            Students = students,
-            TotalCount = totalCount,
-            CurrentPage = page,
-            PageSize = pageSize,
-            Search = q ?? ""
-        };
+		var vm = new StudentVM
+		{
+			Students = students,
+			TotalCount = totalCount,
+			CurrentPage = page,
+			PageSize = pageSize,
+			Search = q ?? ""
+		};
 
-        return View(vm);
-    }
+		return View(vm);
+	}
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(StudentFormDTO dto)
-    {
-        if (!ModelState.IsValid)
-        {
-            return ValidationProblem(ModelState);
-        }
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Create(StudentFormDTO dto)
+	{
+		if (!ModelState.IsValid)
+		{
+			return ValidationProblem(ModelState);
+		}
 
-        await _studentService.CreateAsync(dto);
+		await _studentService.CreateAsync(dto);
 
-        return Ok();
-    }
+		return Ok();
+	}
 
 
-    [HttpPut]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Update(StudentFormDTO dto, Guid id)
-    {
-        if (!ModelState.IsValid)
-        {
-            return ValidationProblem(ModelState);
-        }
+	[HttpPut]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Update(StudentFormDTO dto, Guid id)
+	{
+		if (!ModelState.IsValid)
+		{
+			return ValidationProblem(ModelState);
+		}
 
-        await _studentService.UpdateAsync(id, dto);
+		await _studentService.UpdateAsync(id, dto);
 
-        return Ok();
-    }
+		return Ok();
+	}
 
-    [HttpPatch]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Deactivate(Guid id)
-    {
-        await _studentService.SoftDeleteAsync(id);
+	[HttpPatch]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Deactivate(Guid id)
+	{
+		await _studentService.SoftDeleteAsync(id);
 
-        return Ok();
-    }
+		return Ok();
+	}
 
-    [HttpPatch]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Activate(Guid id)
-    {
-        await _studentService.RecoverAsync(id);
+	[HttpPatch]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Activate(Guid id)
+	{
+		await _studentService.RecoverAsync(id);
 
-        return Ok();
-    }
+		return Ok();
+	}
 }

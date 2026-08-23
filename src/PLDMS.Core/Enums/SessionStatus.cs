@@ -2,7 +2,7 @@
 
 public enum SessionStatus
 {
-    Upcoming,
-    Active,
-    Finished
+	Upcoming,
+	Active,
+	Finished
 }

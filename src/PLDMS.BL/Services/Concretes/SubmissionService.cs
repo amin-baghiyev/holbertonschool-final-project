@@ -9,250 +9,250 @@ namespace PLDMS.BL.Services.Concretes;
 
 public class SubmissionService : ISubmissionService
 {
-    private readonly IRepository<Submission> _submissionRepository;
-    private readonly IRepository<Group> _groupRepository;
-    private readonly IRepository<Exercise> _exerciseRepository;
-    private readonly IJudgeService _judgeService;
-    private readonly PLDMS.BL.Utilities.GitHubService _gitHubService;
+	private readonly IRepository<Submission> _submissionRepository;
+	private readonly IRepository<Group> _groupRepository;
+	private readonly IRepository<Exercise> _exerciseRepository;
+	private readonly IJudgeService _judgeService;
+	private readonly PLDMS.BL.Utilities.GitHubService _gitHubService;
 
-    public SubmissionService(
-        IRepository<Submission> submissionRepository,
-        IRepository<Group> groupRepository,
-        IRepository<Exercise> exerciseRepository,
-        IJudgeService judgeService,
-        PLDMS.BL.Utilities.GitHubService gitHubService)
-    {
-        _submissionRepository = submissionRepository;
-        _groupRepository = groupRepository;
-        _exerciseRepository = exerciseRepository;
-        _judgeService = judgeService;
-        _gitHubService = gitHubService;
-    }
+	public SubmissionService(
+		IRepository<Submission> submissionRepository,
+		IRepository<Group> groupRepository,
+		IRepository<Exercise> exerciseRepository,
+		IJudgeService judgeService,
+		PLDMS.BL.Utilities.GitHubService gitHubService)
+	{
+		_submissionRepository = submissionRepository;
+		_groupRepository = groupRepository;
+		_exerciseRepository = exerciseRepository;
+		_judgeService = judgeService;
+		_gitHubService = gitHubService;
+	}
 
-    public async Task<CodeSubmissionResultDTO> RunCodeAsync(Guid studentId, CodeSubmissionDTO dto)
-    {
-        var (group, exercise, testCases) = await ValidateSubmissionAsync(studentId, dto);
-        var exampleTestCases = testCases.Where(tc => tc.IsExample).ToList();
-        return await ExecuteAndEvaluateCodeAsync(dto, exampleTestCases);
-    }
+	public async Task<CodeSubmissionResultDTO> RunCodeAsync(Guid studentId, CodeSubmissionDTO dto)
+	{
+		var (group, exercise, testCases) = await ValidateSubmissionAsync(studentId, dto);
+		var exampleTestCases = testCases.Where(tc => tc.IsExample).ToList();
+		return await ExecuteAndEvaluateCodeAsync(dto, exampleTestCases);
+	}
 
-    public async Task<CodeSubmissionResultDTO> SubmitCodeAsync(Guid studentId, CodeSubmissionDTO dto)
-    {
-        var (group, exercise, testCases) = await ValidateSubmissionAsync(studentId, dto);
-        
-        var submissionResult = await ExecuteAndEvaluateCodeAsync(dto, testCases);
-        var testsPassedArray = submissionResult.TestResults.Select(tr => tr.Passed).ToArray();
-        string commitHash = "N/A";
+	public async Task<CodeSubmissionResultDTO> SubmitCodeAsync(Guid studentId, CodeSubmissionDTO dto)
+	{
+		var (group, exercise, testCases) = await ValidateSubmissionAsync(studentId, dto);
 
-        var langExt = dto.LanguageId switch
-        {
-            PLDMS.Core.Enums.ProgrammingLanguage.C => ".c",
-            PLDMS.Core.Enums.ProgrammingLanguage.JavaScript => ".js",
-            PLDMS.Core.Enums.ProgrammingLanguage.Java => ".java",
-            PLDMS.Core.Enums.ProgrammingLanguage.Python => ".py",
-            _ => ".txt"
-        };
-        
-        var fileName = $"{exercise.Name}{langExt}";
-        var commitMessage = testsPassedArray.All(t => t) 
-            ? $"feat: completed {exercise.Name}" 
-            : $"fix: attempt {exercise.Name} ({testsPassedArray.Count(t => t)}/{testsPassedArray.Length} passed)";
-        
-        try 
-        {
-            commitHash = await _gitHubService.CommitCodeAsync(
-                group.Session.RepositoryUrl, 
-                group.Name, 
-                fileName, 
-                dto.SourceCode, 
-                commitMessage);
-        }
-        catch (Exception ex)
-        {
-            commitHash = $"Error: {ex.Message}";
-        }
+		var submissionResult = await ExecuteAndEvaluateCodeAsync(dto, testCases);
+		var testsPassedArray = submissionResult.TestResults.Select(tr => tr.Passed).ToArray();
+		string commitHash = "N/A";
 
-        var submission = new Submission
-        {
-            Id = Guid.CreateVersion7(),
-            GroupId = dto.GroupId,
-            ExerciseId = dto.ExerciseId,
-            CommitHash = commitHash,
-            ProgrammingLanguage = dto.LanguageId,
-            Tests = testsPassedArray,
-            CreatedAt = DateTime.UtcNow.AddHours(4)
-        };
+		var langExt = dto.LanguageId switch
+		{
+			PLDMS.Core.Enums.ProgrammingLanguage.C => ".c",
+			PLDMS.Core.Enums.ProgrammingLanguage.JavaScript => ".js",
+			PLDMS.Core.Enums.ProgrammingLanguage.Java => ".java",
+			PLDMS.Core.Enums.ProgrammingLanguage.Python => ".py",
+			_ => ".txt"
+		};
 
-        await _submissionRepository.CreateAsync(submission);
-        await _submissionRepository.SaveChangesAsync();
+		var fileName = $"{exercise.Name}{langExt}";
+		var commitMessage = testsPassedArray.All(t => t)
+			? $"feat: completed {exercise.Name}"
+			: $"fix: attempt {exercise.Name} ({testsPassedArray.Count(t => t)}/{testsPassedArray.Length} passed)";
 
-        return submissionResult;
-    }
+		try
+		{
+			commitHash = await _gitHubService.CommitCodeAsync(
+				group.Session.RepositoryUrl,
+				group.Name,
+				fileName,
+				dto.SourceCode,
+				commitMessage);
+		}
+		catch (Exception ex)
+		{
+			commitHash = $"Error: {ex.Message}";
+		}
 
-    public async Task<IEnumerable<SubmissionListItemDTO>> GetSubmissionsByGroupAsync(Guid groupId, long exerciseId)
-    {
-        var submissions = await _submissionRepository.Table
-            .Where(s => s.GroupId == groupId && s.ExerciseId == exerciseId)
-            .OrderByDescending(s => s.CreatedAt)
-            .ToListAsync();
+		var submission = new Submission
+		{
+			Id = Guid.CreateVersion7(),
+			GroupId = dto.GroupId,
+			ExerciseId = dto.ExerciseId,
+			CommitHash = commitHash,
+			ProgrammingLanguage = dto.LanguageId,
+			Tests = testsPassedArray,
+			CreatedAt = DateTime.UtcNow.AddHours(4)
+		};
 
-        return submissions.Select(s => new SubmissionListItemDTO
-        {
-            Id = s.Id,
-            CommitHash = s.CommitHash,
-            ProgrammingLanguage = s.ProgrammingLanguage,
-            PassCount = s.Tests.Count(t => t),
-            TotalTests = s.Tests.Length,
-            CreatedAt = s.CreatedAt
-        });
-    }
+		await _submissionRepository.CreateAsync(submission);
+		await _submissionRepository.SaveChangesAsync();
 
-    public async Task<string?> GetLastSubmittedCodeAsync(Guid groupId, long exerciseId)
-    {
-        var lastSubmission = await _submissionRepository.Table
-            .Include(s => s.Group).ThenInclude(g => g.Session)
-            .Include(s => s.Exercise)
-            .Where(s => s.GroupId == groupId && s.ExerciseId == exerciseId && !s.CommitHash.StartsWith("Error:") && s.CommitHash != "N/A")
-            .OrderByDescending(s => s.CreatedAt)
-            .FirstOrDefaultAsync();
+		return submissionResult;
+	}
 
-        if (lastSubmission == null)
-            return null;
+	public async Task<IEnumerable<SubmissionListItemDTO>> GetSubmissionsByGroupAsync(Guid groupId, long exerciseId)
+	{
+		var submissions = await _submissionRepository.Table
+			.Where(s => s.GroupId == groupId && s.ExerciseId == exerciseId)
+			.OrderByDescending(s => s.CreatedAt)
+			.ToListAsync();
 
-        var langExt = lastSubmission.ProgrammingLanguage switch
-        {
-            PLDMS.Core.Enums.ProgrammingLanguage.C => ".c",
-            PLDMS.Core.Enums.ProgrammingLanguage.JavaScript => ".js",
-            PLDMS.Core.Enums.ProgrammingLanguage.Java => ".java",
-            PLDMS.Core.Enums.ProgrammingLanguage.Python => ".py",
-            _ => ".txt"
-        };
+		return submissions.Select(s => new SubmissionListItemDTO
+		{
+			Id = s.Id,
+			CommitHash = s.CommitHash,
+			ProgrammingLanguage = s.ProgrammingLanguage,
+			PassCount = s.Tests.Count(t => t),
+			TotalTests = s.Tests.Length,
+			CreatedAt = s.CreatedAt
+		});
+	}
 
-        var fileName = $"{lastSubmission.Exercise.Name}{langExt}";
+	public async Task<string?> GetLastSubmittedCodeAsync(Guid groupId, long exerciseId)
+	{
+		var lastSubmission = await _submissionRepository.Table
+			.Include(s => s.Group).ThenInclude(g => g.Session)
+			.Include(s => s.Exercise)
+			.Where(s => s.GroupId == groupId && s.ExerciseId == exerciseId && !s.CommitHash.StartsWith("Error:") && s.CommitHash != "N/A")
+			.OrderByDescending(s => s.CreatedAt)
+			.FirstOrDefaultAsync();
 
-        try
-        {
-            return await _gitHubService.GetFileContentAsync(
-                lastSubmission.Group.Session.RepositoryUrl,
-                lastSubmission.Group.Name,
-                fileName,
-                lastSubmission.CommitHash);
-        }
-        catch
-        {
-            return null;
-        }
-    }
+		if (lastSubmission == null)
+			return null;
 
-    private async Task<(Group group, Exercise exercise, List<TestCase> testCases)> ValidateSubmissionAsync(Guid studentId, CodeSubmissionDTO dto)
-    {
-        var group = await _groupRepository.GetOneAsync(
-            predicate: g => g.Id == dto.GroupId && g.Students.Any(s => s.StudentId == studentId),
-            includes: query => query.Include(g => g.Session),
-            isTracking: false);
+		var langExt = lastSubmission.ProgrammingLanguage switch
+		{
+			PLDMS.Core.Enums.ProgrammingLanguage.C => ".c",
+			PLDMS.Core.Enums.ProgrammingLanguage.JavaScript => ".js",
+			PLDMS.Core.Enums.ProgrammingLanguage.Java => ".java",
+			PLDMS.Core.Enums.ProgrammingLanguage.Python => ".py",
+			_ => ".txt"
+		};
 
-        if (group == null)
-            throw new BaseException("Group not found or you do not have permission.");
+		var fileName = $"{lastSubmission.Exercise.Name}{langExt}";
 
-        if (group.Session.EndDate < DateTime.UtcNow.AddHours(4))
-            throw new BaseException("Cannot submit code because the session has ended.");
+		try
+		{
+			return await _gitHubService.GetFileContentAsync(
+				lastSubmission.Group.Session.RepositoryUrl,
+				lastSubmission.Group.Name,
+				fileName,
+				lastSubmission.CommitHash);
+		}
+		catch
+		{
+			return null;
+		}
+	}
 
-        var exercise = await _exerciseRepository.GetOneAsync(
-            predicate: e => e.Id == dto.ExerciseId && !e.IsDeleted,
-            includes: query => query.Include(e => e.TestCases).Include(e => e.ExerciseLanguages),
-            isTracking: false);
+	private async Task<(Group group, Exercise exercise, List<TestCase> testCases)> ValidateSubmissionAsync(Guid studentId, CodeSubmissionDTO dto)
+	{
+		var group = await _groupRepository.GetOneAsync(
+			predicate: g => g.Id == dto.GroupId && g.Students.Any(s => s.StudentId == studentId),
+			includes: query => query.Include(g => g.Session),
+			isTracking: false);
 
-        if (exercise == null)
-            throw new BaseException("Exercise not found.");
+		if (group == null)
+			throw new BaseException("Group not found or you do not have permission.");
 
-        if (!exercise.ExerciseLanguages.Any(el => el.ProgrammingLanguage == dto.LanguageId))
-            throw new BaseException("Selected language is not supported for this exercise.");
+		if (group.Session.EndDate < DateTime.UtcNow.AddHours(4))
+			throw new BaseException("Cannot submit code because the session has ended.");
 
-        var testCases = exercise.TestCases.Where(tc => !tc.IsDeleted).ToList();
-        
-        if (testCases.Count == 0)
-            throw new BaseException("This exercise has no test cases configured.");
+		var exercise = await _exerciseRepository.GetOneAsync(
+			predicate: e => e.Id == dto.ExerciseId && !e.IsDeleted,
+			includes: query => query.Include(e => e.TestCases).Include(e => e.ExerciseLanguages),
+			isTracking: false);
 
-        return (group, exercise, testCases);
-    }
+		if (exercise == null)
+			throw new BaseException("Exercise not found.");
 
-    private async Task<CodeSubmissionResultDTO> ExecuteAndEvaluateCodeAsync(CodeSubmissionDTO dto, List<TestCase> testCases)
-    {
-        var submissionResult = new CodeSubmissionResultDTO
-        {
-            TotalTests = testCases.Count,
-            PassedTests = 0
-        };
+		if (!exercise.ExerciseLanguages.Any(el => el.ProgrammingLanguage == dto.LanguageId))
+			throw new BaseException("Selected language is not supported for this exercise.");
 
-        for (int i = 0; i < testCases.Count; i++)
-        {
-            var tc = testCases[i];
+		var testCases = exercise.TestCases.Where(tc => !tc.IsDeleted).ToList();
 
-            try
-            {
-                var judgeResponse = await _judgeService.ExecuteCodeAsync(
-                    dto.LanguageId,
-                    dto.SourceCode,
-                    tc.Input
-                );
+		if (testCases.Count == 0)
+			throw new BaseException("This exercise has no test cases configured.");
 
-                var actualOutput = NormalizeOutput(judgeResponse.stdout);
-                var expectedOutput = NormalizeOutput(tc.Output);
+		return (group, exercise, testCases);
+	}
 
-                var tcResult = new TestCaseResultDTO
-                {
-                    TestCaseIndex = i + 1,
-                    IsExample = tc.IsExample,
-                    ExpectedOutput = tc.IsExample ? tc.Output : null,
-                    ActualOutput = tc.IsExample ? judgeResponse.stdout : null
-                };
+	private async Task<CodeSubmissionResultDTO> ExecuteAndEvaluateCodeAsync(CodeSubmissionDTO dto, List<TestCase> testCases)
+	{
+		var submissionResult = new CodeSubmissionResultDTO
+		{
+			TotalTests = testCases.Count,
+			PassedTests = 0
+		};
 
-                if (judgeResponse.status?.id == 3 && actualOutput == expectedOutput)
-                {
-                    tcResult.Passed = true;
-                    submissionResult.PassedTests++;
-                }
-                else
-                {
-                    tcResult.Passed = false;
+		for (int i = 0; i < testCases.Count; i++)
+		{
+			var tc = testCases[i];
 
-                    tcResult.ErrorMessage =
-                        judgeResponse.compile_output ??
-                        judgeResponse.stderr ??
-                        judgeResponse.status?.description ??
-                        "Wrong Answer";
-                }
+			try
+			{
+				var judgeResponse = await _judgeService.ExecuteCodeAsync(
+					dto.LanguageId,
+					dto.SourceCode,
+					tc.Input
+				);
 
-                submissionResult.TestResults.Add(tcResult);
-            }
-            catch (Exception ex)
-            {
-                submissionResult.TestResults.Add(new TestCaseResultDTO
-                {
-                    TestCaseIndex = i + 1,
-                    Passed = false,
-                    IsExample = tc.IsExample,
-                    ErrorMessage = tc.IsExample ? $"Execution failed: {ex.Message}" : "Execution Error"
-                });
-            }
-        }
+				var actualOutput = NormalizeOutput(judgeResponse.stdout);
+				var expectedOutput = NormalizeOutput(tc.Output);
 
-        submissionResult.Success = submissionResult.TotalTests == submissionResult.PassedTests;
-        submissionResult.Message = submissionResult.Success
-            ? "All tests passed!"
-            : "Some tests failed. Check the results.";
+				var tcResult = new TestCaseResultDTO
+				{
+					TestCaseIndex = i + 1,
+					IsExample = tc.IsExample,
+					ExpectedOutput = tc.IsExample ? tc.Output : null,
+					ActualOutput = tc.IsExample ? judgeResponse.stdout : null
+				};
 
-        return submissionResult;
-    }
+				if (judgeResponse.status?.id == 3 && actualOutput == expectedOutput)
+				{
+					tcResult.Passed = true;
+					submissionResult.PassedTests++;
+				}
+				else
+				{
+					tcResult.Passed = false;
 
-    private static string NormalizeOutput(string? output)
-    {
-        if (string.IsNullOrWhiteSpace(output))
-            return string.Empty;
+					tcResult.ErrorMessage =
+						judgeResponse.compile_output ??
+						judgeResponse.stderr ??
+						judgeResponse.status?.description ??
+						"Wrong Answer";
+				}
 
-        return output
-            .Trim()
-            .Replace("\r\n", "\n")
-            .Replace("\r", "\n");
-    }
+				submissionResult.TestResults.Add(tcResult);
+			}
+			catch (Exception ex)
+			{
+				submissionResult.TestResults.Add(new TestCaseResultDTO
+				{
+					TestCaseIndex = i + 1,
+					Passed = false,
+					IsExample = tc.IsExample,
+					ErrorMessage = tc.IsExample ? $"Execution failed: {ex.Message}" : "Execution Error"
+				});
+			}
+		}
+
+		submissionResult.Success = submissionResult.TotalTests == submissionResult.PassedTests;
+		submissionResult.Message = submissionResult.Success
+			? "All tests passed!"
+			: "Some tests failed. Check the results.";
+
+		return submissionResult;
+	}
+
+	private static string NormalizeOutput(string? output)
+	{
+		if (string.IsNullOrWhiteSpace(output))
+			return string.Empty;
+
+		return output
+			.Trim()
+			.Replace("\r\n", "\n")
+			.Replace("\r", "\n");
+	}
 }

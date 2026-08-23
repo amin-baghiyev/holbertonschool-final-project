@@ -6,16 +6,16 @@ namespace PLDMS.DL.Configurations;
 
 public class ProgramConfiguration : IEntityTypeConfiguration<Program>
 {
-    public void Configure(EntityTypeBuilder<Program> builder)
-    {
-        builder.Property(p => p.Name)
-            .IsRequired()
-            .HasMaxLength(150);
+	public void Configure(EntityTypeBuilder<Program> builder)
+	{
+		builder.Property(p => p.Name)
+			.IsRequired()
+			.HasMaxLength(150);
 
-        builder.Property(p => p.Duration)
-            .IsRequired();
-        
-        builder.Property(p => p.IsDeleted)
-            .HasDefaultValue(false);
-    }
+		builder.Property(p => p.Duration)
+			.IsRequired();
+
+		builder.Property(p => p.IsDeleted)
+			.HasDefaultValue(false);
+	}
 }

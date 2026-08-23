@@ -6,10 +6,10 @@ namespace PLDMS.BL.Profiles;
 
 public class CohortProfile : Profile
 {
-    public CohortProfile()
-    {
-        CreateMap<Cohort, CohortFormDTO>().ReverseMap();
+	public CohortProfile()
+	{
+		CreateMap<Cohort, CohortFormDTO>().ReverseMap();
 
-        CreateMap<Cohort, CohortOptionItemDTO>();
-    }
+		CreateMap<Cohort, CohortOptionItemDTO>();
+	}
 }

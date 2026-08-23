@@ -80,4 +80,13 @@ src/
 
 ---
 
+## Technical Documentation
+
+For more details, see the technical documentation:
+
+- [Technical Documentation in English](docs/technical-documentation-en.md)
+- [Technical Documentation in Azerbaijani](docs/technical-documentation-az.md)
+
+---
+
 *This project was developed for the Holberton School Final Project.*

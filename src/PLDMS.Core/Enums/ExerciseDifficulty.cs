@@ -2,7 +2,7 @@
 
 public enum ExerciseDifficulty
 {
-    Easy,
-    Medium,
-    Hard
+	Easy,
+	Medium,
+	Hard
 }

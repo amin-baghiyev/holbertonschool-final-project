@@ -5,6 +5,6 @@ namespace PLDMS.BL.Services.Abstractions;
 
 public interface IAccountService
 {
-    Task<AppUser> LoginAsync(UserLoginDTO dto);
-    Task LogoutAsync();
+	Task<AppUser> LoginAsync(UserLoginDTO dto);
+	Task LogoutAsync();
 }

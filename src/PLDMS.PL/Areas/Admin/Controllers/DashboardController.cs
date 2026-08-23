@@ -8,16 +8,16 @@ namespace PLDMS.PL.Areas.Admin.Controllers;
 [Authorize(Roles = "Admin")]
 public class DashboardController : Controller
 {
-    private readonly IDashboardService _dashboardService;
+	private readonly IDashboardService _dashboardService;
 
-    public DashboardController(IDashboardService dashboardService)
-    {
-        _dashboardService = dashboardService;
-    }
+	public DashboardController(IDashboardService dashboardService)
+	{
+		_dashboardService = dashboardService;
+	}
 
-    public async Task<IActionResult> Index()
-    {
-        var stats = await _dashboardService.AdminDashboardStatsAsync();
-        return View(stats);
-    }
+	public async Task<IActionResult> Index()
+	{
+		var stats = await _dashboardService.AdminDashboardStatsAsync();
+		return View(stats);
+	}
 }

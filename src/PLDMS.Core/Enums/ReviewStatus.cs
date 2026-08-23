@@ -2,9 +2,9 @@
 
 public enum ReviewStatus
 {
-    Pending,
-    UnderReview,
-    Reviewed,
-    Accepted,
-    Rejected
+	Pending,
+	UnderReview,
+	Reviewed,
+	Accepted,
+	Rejected
 }

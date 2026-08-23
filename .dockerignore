@@ -3,8 +3,8 @@
 **/bin
 **/obj
 **/.DS_Store
-**/node_modules
 **/.env
 .gitignore
 README.md
 PLDMS.slnx
+**/docs

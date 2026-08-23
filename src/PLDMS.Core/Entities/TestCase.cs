@@ -4,11 +4,11 @@ namespace PLDMS.Core.Entities;
 
 public class TestCase : BaseEntity<long>
 {
-    public string Input { get; set; } = null!;
-    public string Output { get; set; } = null!;
-    public bool IsExample { get; set; }
-    public bool IsDeleted { get; set; }
+	public string Input { get; set; } = null!;
+	public string Output { get; set; } = null!;
+	public bool IsExample { get; set; }
+	public bool IsDeleted { get; set; }
 
-    public long ExerciseId { get; set; }
-    public Exercise Exercise { get; set; }
+	public long ExerciseId { get; set; }
+	public Exercise Exercise { get; set; }
 }
